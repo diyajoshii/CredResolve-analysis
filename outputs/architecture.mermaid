@@ -1,0 +1,63 @@
+flowchart LR
+  subgraph SRC["Source systems"]
+    direction TB
+    S1["Dialer / telephony<br/><i>calls, attempts, dispositions</i>"]
+    S2["Digital gateways<br/><i>WhatsApp, SMS</i>"]
+    S3["Field app<br/><i>visits, geo</i>"]
+    S4["Core lending<br/><i>accounts, borrowers, status</i>"]
+    S5["Payment gateways<br/><i>payments, reversals</i>"]
+    S6["Campaign engine<br/><i>targeting, campaigns</i>"]
+    S7["Finance / HR ⚠ NEW<br/><i>agent cost, vendor rates</i>"]
+  end
+
+  subgraph RAW["RAW — immutable landing"]
+    R["Partitioned by ingest_date<br/>append-only · never edited<br/>schema-on-read"]
+  end
+
+  subgraph STG["STAGING — one row per source row"]
+    T["Types cast once<br/>timestamps → UTC + IST<br/>codes harmonised<br/>DQ issues become FLAGS"]
+  end
+
+  subgraph CLN["CLEAN — deduplicated"]
+    C["4-rule payment dedup<br/>SCD collapse on dimensions<br/>rejects → reject ledger"]
+  end
+
+  subgraph GLD["GOLDEN — declared grain"]
+    D1["dim_borrower<br/>dim_account<br/>dim_vendor<br/>dim_campaign"]
+    D2["dim_agent<br/>trust_level=LOW"]
+    F1["fct_payment<br/>fct_call · fct_touch<br/>fct_disposition · fct_ptp<br/>fct_targeting"]
+  end
+
+  subgraph FEA["FEATURE — analysis-ready"]
+    FE["account_daily_state (as-of, no look-ahead)<br/>account_features<br/>attribution_windows (24h/72h/7d)"]
+  end
+
+  subgraph MET["METRICS — one definition each"]
+    M["monthly_recovery · monthly_funnel<br/>attribution_sensitivity<br/><b>every metric carries calendar_days<br/>+ is_complete_month</b>"]
+  end
+
+  subgraph OUT["Consumption"]
+    DSH["Executive dashboard"]
+    EXP["Experiment readouts"]
+    ALR["Alerts &amp; anomaly feed"]
+  end
+
+  S1 & S2 & S3 & S4 & S5 & S6 & S7 --> R
+  R --> T --> C --> D1 & D2 & F1
+  D1 & F1 --> FE --> M --> DSH & EXP & ALR
+
+  DQ{{"DQ gate<br/>BLOCK / WARN"}}
+  C -.-> DQ
+  F1 -.-> DQ
+  M -.-> DQ
+  DQ -.->|"BLOCK ⇒ publish halted"| DSH
+
+  REJ[("reject ledger<br/>raw = golden + rejected")]
+  C -.-> REJ
+
+  classDef new fill:#fdf1ed,stroke:#B23A22,stroke-width:2px,color:#141B23
+  classDef gate fill:#fff8e6,stroke:#8F6A0A,stroke-width:2px,color:#141B23
+  classDef quar fill:#f2f4f7,stroke:#6B7783,stroke-dasharray:4 3,color:#141B23
+  class S7 new
+  class DQ gate
+  class D2 quar

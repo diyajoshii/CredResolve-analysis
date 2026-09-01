@@ -1,0 +1,204 @@
+
+======================================================================
+borrowers  rows=30,600  cols=8
+  surrogate key 'borrower_id': unique=11,015  dup_rows_on_pk=19,585
+  fully-identical duplicate rows: 600
+  nulls: phone=614 (2.0%), email=895 (2.9%)
+  name: {'Rohan Patel': 3144, 'Amit Kumar': 3119, 'Vikram Shah': 3078, 'Rahul Verma': 3076, 'Aarav Sharma': 3058, 'Ananya Rao': 3052, 'Pooja Nair': 3050, 'Priya Mehta': 3034, 'Neha Singh': 3004, 'Sneha Das': 2985}
+  city: {'Delhi': 3171, 'Hyderabad': 3119, 'Bhubaneswar': 3094, 'Pune': 3090, 'Bengaluru': 3074, 'Chennai': 3073, 'Gurugram': 3054, 'Jaipur': 3003, 'Mumbai': 3002, 'Kolkata': 2920}
+  state: {'Maharashtra': 6092, 'Delhi': 3171, 'Telangana': 3119, 'Odisha': 3094, 'Karnataka': 3074, 'Tamil Nadu': 3073, 'Haryana': 3054, 'Rajasthan': 3003, 'West Bengal': 2920}
+  created_at: min=2025-01-01 00:14:38  max=2026-08-03 23:37:55
+  updated_at: min=2025-01-01 00:19:40  max=2026-08-03 23:48:36
+
+======================================================================
+accounts  rows=30,000  cols=11
+  surrogate key 'account_id': unique=30,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  nulls: borrower_id=455 (1.5%)
+  loan_type: {'CREDIT_CARD': 6080, 'AUTO': 6079, 'PERSONAL': 5983, 'CONSUMER': 5930, 'BNPL': 5928}
+  risk_segment: {'HIGH': 7552, 'MEDIUM': 7533, 'LOW': 7513, 'NPA': 7402}
+  status: {'ACTIVE': 7539, 'CLOSED': 7496, 'PAID': 7486, 'WRITEOFF': 7479}
+  timezone: {'UTC': 10096, 'Asia/Kolkata': 9981, 'Asia/Dubai': 9923}
+  schema_version: {'v1': 10152, 'v2': 10026, 'v3': 9822}
+  opened_at: min=2024-01-01 00:02:27  max=2025-11-30 23:52:36
+
+======================================================================
+agents  rows=30,000  cols=8
+  surrogate key 'agent_id': unique=1,000  dup_rows_on_pk=29,000
+  fully-identical duplicate rows: 0
+  agent_name: {'Sneha Das': 3151, 'Amit Kumar': 3119, 'Priya Mehta': 3072, 'Neha Singh': 3003, 'Vikram Shah': 2986, 'Aarav Sharma': 2981, 'Rohan Patel': 2956, 'Ananya Rao': 2939, 'Pooja Nair': 2929, 'Rahul Verma': 2864}
+  team: {'T1': 6095, 'T2': 6005, 'FIELD': 6002, 'DIGITAL': 5954, 'T3': 5944}
+  status: {'ACTIVE': 10083, 'INACTIVE': 10066, 'SUSPENDED': 9851}
+  joined_at: min=2024-01-01 00:10:05  max=2025-11-30 23:23:30
+  updated_at: min=2025-01-01 00:57:32  max=2026-08-03 23:45:38
+
+======================================================================
+agent_sessions  rows=15,000  cols=7
+  surrogate key 'session_id': unique=15,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  channel: {'WHATSAPP': 3810, 'FIELD': 3796, 'VOICE': 3740, 'SMS': 3654}
+  timezone: {'Asia/Kolkata': 7506, 'UTC': 7494}
+  login_at: min=2026-01-01 00:01:57  max=2026-08-08 23:51:54
+  logout_at: min=2026-01-01 04:48:48  max=2026-08-09 07:50:12
+
+======================================================================
+campaigns  rows=120  cols=7
+  surrogate key 'campaign_id': unique=120  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  campaign_name: {'30DPD_W1': 28, 'NPA_RECOVERY': 28, 'BOUNCE': 25, 'DIGITAL_FOLLOWUP': 21, '60DPD_INTENT': 18}
+  channel: {'WHATSAPP': 31, 'SMS': 28, 'MIXED': 23, 'VOICE': 20, 'FIELD': 18}
+  strategy_version: {'legacy': 37, 'v3': 32, 'v2': 27, 'v1': 24}
+  target_definition: {'DPD>=60': 31, 'HIGH_RISK': 25, 'PROMISE_BROKEN': 24, 'DPD>=30': 22, 'NPA': 18}
+  start_at: min=2026-01-01 09:34:51  max=2026-05-29 20:31:27
+  end_at: min=2026-01-16 12:12:50  max=2026-08-16 18:13:39
+
+======================================================================
+daily_targeting  rows=45,000  cols=7
+  surrogate key 'target_id': unique=45,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  recommended_channel: {'FIELD': 11365, 'SMS': 11221, 'WHATSAPP': 11212, 'VOICE': 11202}
+  status: {'EXPIRED': 11371, 'CONTACTED': 11254, 'QUEUED': 11202, 'SKIPPED': 11173}
+  target_date: min=2026-01-01 00:00:00  max=2026-08-08 00:00:00
+
+======================================================================
+calls  rows=91,350  cols=11
+  surrogate key 'call_id': unique=90,000  dup_rows_on_pk=1,350
+  fully-identical duplicate rows: 1,271
+  nulls: agent_id=1,827 (2.0%)
+  direction: {'OUTBOUND': 84151, 'INBOUND': 7199}
+  call_status: {'NO_ANSWER': 18363, 'BUSY': 18330, 'FAILED': 18276, 'VOICEMAIL': 18235, 'ANSWERED': 18146}
+  timezone: {'Asia/Kolkata': 30485, 'Asia/Dubai': 30464, 'UTC': 30401}
+  event_at: min=2025-12-29 06:52:37  max=2026-08-12 15:43:05
+
+======================================================================
+call_attempts  rows=120,000  cols=9
+  surrogate key 'attempt_id': unique=120,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  nulls: vendor_id=2,400 (2.0%)
+  attempt_status: {'RINGING': 24087, 'NO_ANSWER': 24042, 'BUSY': 24037, 'CONNECTED': 24023, 'FAILED': 23811}
+  event_at: min=2026-01-01 00:01:18  max=2026-08-08 23:58:40
+
+======================================================================
+call_dispositions  rows=35,000  cols=8
+  surrogate key 'disposition_id': unique=35,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  disposition_code: {'NO_CONTACT': 4010, 'WRONG_NUMBER': 3946, 'PROMISE_TO_PAY': 3926, 'PTP': 3904, 'PTP_BROKEN': 3900, 'CALLBACK': 3872, 'DISPUTE': 3826, 'PAID': 3818, 'REFUSED': 3798}
+  disposition_version: {'legacy': 11726, 'v2': 11654, 'v1': 11620}
+  event_at: min=2026-01-01 00:10:00  max=2026-08-08 23:50:50
+
+======================================================================
+whatsapp_events  rows=60,600  cols=8
+  surrogate key 'whatsapp_event_id': unique=60,000  dup_rows_on_pk=600
+  fully-identical duplicate rows: 600
+  event_type: {'SENT': 10244, 'PAYMENT_CLICK': 10180, 'FAILED': 10114, 'REPLIED': 10035, 'READ': 10022, 'DELIVERED': 10005}
+  template_code: {'PTP_01': 12275, 'FIELD_VISIT': 12177, 'PAYMENT_LINK': 12152, 'LEGAL_NOTICE': 12070, 'REMINDER_01': 11926}
+  event_at: min=2026-01-01 00:01:49  max=2026-08-08 23:56:16
+
+======================================================================
+sms_events  rows=45,000  cols=8
+  surrogate key 'sms_event_id': unique=45,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  event_type: {'SENT': 11391, 'FAILED': 11251, 'DELIVERED': 11219, 'CLICKED': 11139}
+  template_code: {'PAYMENT_LINK': 11420, 'DUE_REMINDER': 11256, 'NOTICE': 11166, 'PTP_REMINDER': 11158}
+  event_at: min=2026-01-01 00:04:16  max=2026-08-08 23:46:06
+
+======================================================================
+field_visits  rows=25,000  cols=10
+  surrogate key 'visit_id': unique=25,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  nulls: scheduled_at=250 (1.0%)
+  visit_type: {'FIRST_VISIT': 6275, 'FOLLOWUP': 6271, 'NOTICE': 6262, 'AFTER_HOURS': 6192}
+  outcome: {'WRONG_ADDRESS': 4221, 'CONTACTED': 4205, 'PTP': 4200, 'NOT_AVAILABLE': 4190, 'REFUSED': 4104, 'PAID': 4080}
+  event_at: min=2026-01-01 00:07:53  max=2026-08-08 23:50:03
+  scheduled_at: min=2025-12-31 05:21:55  max=2026-08-08 21:50:07
+
+======================================================================
+promises_to_pay  rows=18,000  cols=9
+  surrogate key 'ptp_id': unique=18,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  status: {'BROKEN': 4553, 'CANCELLED': 4543, 'KEPT': 4489, 'OPEN': 4415}
+  source: {'CALL': 4571, 'FIELD': 4546, 'SMS': 4449, 'WHATSAPP': 4434}
+  event_at: min=2026-01-01 00:24:14  max=2026-08-08 23:59:33
+  promised_date: min=2026-01-02 04:36:18  max=2026-09-06 21:23:52
+
+======================================================================
+payments  rows=25,500  cols=9
+  surrogate key 'payment_id': unique=25,000  dup_rows_on_pk=500
+  fully-identical duplicate rows: 486
+  nulls: payment_reference=382 (1.5%)
+  payment_status: {'SUCCESS': 17880, 'FAILED': 3744, 'PENDING': 2592, 'REVERSED': 1284}
+  payment_method: {'CARD': 5227, 'NACH': 5158, 'NETBANKING': 5059, 'UPI': 5052, 'CASH': 5004}
+  event_at: min=2026-01-01 00:14:40  max=2026-08-08 23:50:23
+
+======================================================================
+vendor_telephony  rows=15  cols=6
+  surrogate key 'vendor_id': unique=15  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  vendor_name: {'Airtel': 5, 'Twilio': 3, 'Knowlarity': 3, 'Exotel': 2, 'TataTele': 2}
+  timezone: {'UTC': 8, 'Asia/Kolkata': 7}
+  status: {'INACTIVE': 9, 'ACTIVE': 6}
+  schema_version: {'v1': 7, 'v3': 6, 'v2': 2}
+
+======================================================================
+complaints  rows=8,000  cols=9
+  surrogate key 'complaint_id': unique=8,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  complaint_type: {'AGENT_BEHAVIOUR': 1202, 'DISPUTE': 1155, 'PRIVACY': 1155, 'DND': 1152, 'HARASSMENT': 1126, 'PAYMENT': 1112, 'WRONG_CONTACT': 1098}
+  severity: {'MEDIUM': 2047, 'HIGH': 1997, 'LOW': 1988, 'CRITICAL': 1968}
+  status: {'OPEN': 2096, 'INVESTIGATING': 2005, 'CLOSED': 1964, 'RESOLVED': 1935}
+  source: {'FIELD': 1647, 'EMAIL': 1607, 'WHATSAPP': 1589, 'SMS': 1579, 'CALL': 1578}
+  event_at: min=2026-01-01 00:38:02  max=2026-08-08 23:35:33
+  resolution_at: min=2026-01-02 07:36:01  max=2026-08-26 13:22:27
+
+======================================================================
+account_status_history  rows=60,000  cols=8
+  surrogate key 'history_id': unique=60,000  dup_rows_on_pk=0
+  fully-identical duplicate rows: 0
+  status: {'PAID': 8650, 'CLOSED': 8614, 'DELINQUENT': 8612, 'NPA': 8612, 'WRITEOFF': 8583, 'ACTIVE': 8518, 'PTP': 8411}
+  source: {'CORE': 12079, 'BATCH': 12073, 'CALL': 12028, 'FIELD': 11911, 'PAYMENT': 11909}
+  event_at: min=2026-01-01 00:01:08  max=2026-08-08 23:50:45
+  recorded_at: min=2025-12-31 01:26:29  max=2026-08-09 22:02:27
+
+
+======================================================================
+CROSS-TABLE ID INTEGRITY
+======================================================================
+  accounts.borrower_id -> borrowers.borrower_id: 897 distinct orphan ids (8.20% of distinct)
+  calls.borrower_id -> borrowers.borrower_id: 985 distinct orphan ids (8.21% of distinct)
+  call_attempts.borrower_id -> borrowers.borrower_id: 985 distinct orphan ids (8.21% of distinct)
+  call_dispositions.borrower_id -> borrowers.borrower_id: 925 distinct orphan ids (8.14% of distinct)
+  whatsapp_events.borrower_id -> borrowers.borrower_id: 978 distinct orphan ids (8.21% of distinct)
+  sms_events.borrower_id -> borrowers.borrower_id: 967 distinct orphan ids (8.25% of distinct)
+  field_visits.borrower_id -> borrowers.borrower_id: 872 distinct orphan ids (8.28% of distinct)
+  promises_to_pay.borrower_id -> borrowers.borrower_id: 761 distinct orphan ids (8.18% of distinct)
+  payments.borrower_id -> borrowers.borrower_id: 846 distinct orphan ids (8.08% of distinct)
+  complaints.borrower_id -> borrowers.borrower_id: 494 distinct orphan ids (8.46% of distinct)
+  account_status_history.borrower_id -> borrowers.borrower_id: 980 distinct orphan ids (8.22% of distinct)
+  calls.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  call_attempts.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  call_dispositions.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  whatsapp_events.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  sms_events.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  field_visits.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  promises_to_pay.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  payments.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  complaints.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  account_status_history.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  daily_targeting.account_id -> accounts.account_id: 0 distinct orphan ids (0.00% of distinct)
+  calls.agent_id -> agents.agent_id: 0 distinct orphan ids (0.00% of distinct)
+  call_attempts.agent_id -> agents.agent_id: 0 distinct orphan ids (0.00% of distinct)
+  call_dispositions.agent_id -> agents.agent_id: 0 distinct orphan ids (0.00% of distinct)
+  field_visits.agent_id -> agents.agent_id: 0 distinct orphan ids (0.00% of distinct)
+  promises_to_pay.agent_id -> agents.agent_id: 0 distinct orphan ids (0.00% of distinct)
+  agent_sessions.agent_id -> agents.agent_id: 0 distinct orphan ids (0.00% of distinct)
+  calls.campaign_id -> campaigns.campaign_id: 0 distinct orphan ids (0.00% of distinct)
+  daily_targeting.campaign_id -> campaigns.campaign_id: 0 distinct orphan ids (0.00% of distinct)
+  calls.vendor_id -> vendor_telephony.vendor_id: 0 distinct orphan ids (0.00% of distinct)
+  call_attempts.vendor_id -> vendor_telephony.vendor_id: 0 distinct orphan ids (0.00% of distinct)
+  payments.provider_id -> vendor_telephony.vendor_id: 0 distinct orphan ids (0.00% of distinct)
+
+======================================================================
+CALL LINKAGE
+======================================================================
+  call_attempts.call_id -> calls.call_id: 0 distinct orphan ids (0.00% of distinct)
+  call_dispositions.call_id -> calls.call_id: 0 distinct orphan ids (0.00% of distinct)

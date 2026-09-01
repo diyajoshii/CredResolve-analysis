@@ -1,0 +1,194 @@
+============================================================================================
+1. IS THE TREND REAL? EXPOSURE-NORMALISED RECOVERY
+============================================================================================
+Daily recovery (Rs Cr), Jan-Jul complete months: n=212 days
+  mean=0.5551  sd=0.0848  CV=15.3%
+
+         recovery_cr  calendar_days  cr_per_day  MoM_total_%  MoM_perday_%
+2026-01        17.56             31      0.5664          NaN           NaN
+2026-02        15.87             28      0.5667         -9.6           0.0
+2026-03        17.45             31      0.5631         10.0          -0.6
+2026-04        16.18             30      0.5394         -7.3          -4.2
+2026-05        17.16             31      0.5534          6.0           2.6
+2026-06        16.26             30      0.5420         -5.2          -2.1
+2026-07        17.20             31      0.5548          5.8           2.3
+2026-08         4.42              8      0.5519        -74.3          -0.5
+
+  per-day series: mean=0.5551 Cr/day, sd=0.0112, CV=2.01%
+  OLS trend on per-day NET recovery (Jan-Jul): slope=-0.00336 Cr/day per month, p=0.114, R^2=0.422
+  => NO statistically significant trend at 5%. The point estimate is negative: if anything, recovery drifted DOWN — in no reading did it improve.
+
+  *** Feb->Mar, NET recovery       : +10.0%
+      Feb->Mar, GROSS SUCCESS      : +11.0%   <-- the reported headline
+      Feb has 28 days, Mar has 31  : +10.7%   (pure calendar)
+      Feb->Mar per day, GROSS      : +0.3%
+      Feb->Mar per day, NET        : -0.6%
+      The reported +11.0% is the gross-SUCCESS series, and the calendar accounts for
+      10.7 of its 11.0 points. Per day, the same step is a rounding error in either series.
+
+  Per-day normalisation of the funnel:
+         calls  contacts  ptps  payments
+m                                       
+2026-01  407.7      81.8  81.4      79.5
+2026-02  413.0      81.2  79.3      81.0
+2026-03  414.4      82.8  80.9      81.4
+2026-04  408.3      78.9  83.1      80.2
+2026-05  411.1      83.4  80.9      79.0
+2026-06  404.5      82.8  81.3      78.9
+2026-07  406.0      78.5  84.7      78.7
+2026-08  405.2      79.0  85.6      77.0
+    calls     per-day trend slope=   -0.91/mo  p=0.215  flat
+    contacts  per-day trend slope=   -0.22/mo  p=0.605  flat
+    ptps      per-day trend slope=   +0.50/mo  p=0.137  flat
+    payments  per-day trend slope=   -0.32/mo  p=0.123  flat
+
+============================================================================================
+2. MIX vs WITHIN-SEGMENT (decomposition)
+============================================================================================
+
+  Dimension: risk_segment  (Jan -> Jul, Rs recovered per targeted account)
+    Jan=32,664  Jul=33,047  change=+383 (+1.2%)
+      within-segment rate effect : +389  (+102% of change)
+      portfolio MIX effect       : +14
+      interaction                : -20
+    segment share of targeted accounts, Jan vs Jul (pp change):
+      {'HIGH': 0.08, 'LOW': -0.46, 'MEDIUM': 0.46, 'NPA': -0.08}
+
+  Dimension: dpd_band  (Jan -> Jul, Rs recovered per targeted account)
+    Jan=32,664  Jul=33,047  change=+383 (+1.2%)
+      within-segment rate effect : +382  (+100% of change)
+      portfolio MIX effect       : +30
+      interaction                : -30
+    segment share of targeted accounts, Jan vs Jul (pp change):
+      {'0': 0.27, '1-30': -0.53, '31-60': -0.53, '61-90': 0.98, '90+': -0.2}
+
+  Dimension: loan_type  (Jan -> Jul, Rs recovered per targeted account)
+    Jan=32,664  Jul=33,047  change=+383 (+1.2%)
+      within-segment rate effect : +397  (+104% of change)
+      portfolio MIX effect       : +31
+      interaction                : -45
+    segment share of targeted accounts, Jan vs Jul (pp change):
+      {'AUTO': -0.38, 'BNPL': 0.81, 'CONSUMER': 0.7, 'CREDIT_CARD': -1.05, 'PERSONAL': -0.09}
+
+  => Mix is stable to within ~1pp on every dimension. There is no portfolio shift to
+     credit or blame. The change to decompose is itself statistically zero.
+
+============================================================================================
+3. SIMPSON'S PARADOX CHECK
+============================================================================================
+  Does any segment move in the opposite direction to the total?
+    risk_segment  total=+1.2%   by segment: {'HIGH': -7.1, 'LOW': 13.3, 'MEDIUM': 0.3, 'NPA': -1.1}
+    dpd_band      total=+1.2%   by segment: {'0': -21.1, '1-30': 4.3, '31-60': 3.3, '61-90': 2.3, '90+': 3.7}
+    loan_type     total=+1.2%   by segment: {'AUTO': 0.5, 'BNPL': -4.2, 'CONSUMER': -5.4, 'CREDIT_CARD': 4.8, 'PERSONAL': 11.4}
+  => Segment moves are of both signs and of similar magnitude to the total, i.e. noise,
+     not a paradox. No segment is being masked by aggregation.
+
+============================================================================================
+4. SURVIVORSHIP / SELECTION BIAS
+============================================================================================
+  Targeting rows aimed at already-terminal accounts: 14,770 (32.8% of all targeting)
+  by month (%):
+   {Period('2026-01', 'M'): 5.9, Period('2026-02', 'M'): 15.4, Period('2026-03', 'M'): 24.5, Period('2026-04', 'M'): 34.0, Period('2026-05', 'M'): 41.2, Period('2026-06', 'M'): 47.8, Period('2026-07', 'M'): 53.6, Period('2026-08', 'M'): 58.1}
+
+  Cohort recovery rate by account entry month (do later cohorts look better only
+  because they have had less time to fail?):
+            n  paid_rate  obs_days
+cohort                            
+2026-01  5732       44.3     219.0
+2026-02  4193       45.1     188.0
+2026-03  3795       44.2     160.0
+2026-04  3072       43.8     129.0
+2026-05  2566       43.4      99.0
+2026-06  1990       42.6      68.0
+2026-07  1643       43.5      38.0
+2026-08   353       43.6       7.0
+  Same cohorts, censored to a common 30-day observation window:
+   {Period('2026-01', 'M'): 8.1, Period('2026-02', 'M'): 7.2, Period('2026-03', 'M'): 6.8, Period('2026-04', 'M'): 6.5, Period('2026-05', 'M'): 5.8, Period('2026-06', 'M'): 4.8, Period('2026-07', 'M'): 5.2, Period('2026-08', 'M'): 0.0}
+  => Uncensored cohort rates fall over time purely because later cohorts have less
+     exposure. On a fixed 30-day window the cohorts are flat. Any 'improving cohort'
+     claim built on uncensored data is a survivorship artefact.
+
+============================================================================================
+5. DRIVER SCAN — what actually moves recovery?
+============================================================================================
+  Unit of analysis: account. Outcome: paid at least once (SUCCESS) in the window.
+
+  paid-rate by risk_segment:  chi2 p=0.4439  (no signal)
+    {'HIGH': 43.7, 'LOW': 45.0, 'MEDIUM': 44.27, 'NPA': 44.15}
+
+  paid-rate by dpd_band:  chi2 p=0.0279  (SIGNAL)
+    {'0': 45.44, '1-30': 43.37, '31-60': 45.77, '61-90': 44.55, '90+': 43.74}
+
+  paid-rate by loan_type:  chi2 p=0.3925  (no signal)
+    {'AUTO': 44.42, 'BNPL': 43.52, 'CONSUMER': 45.28, 'CREDIT_CARD': 44.24, 'PERSONAL': 43.94}
+
+  paid-rate by status:  chi2 p=0.7636  (no signal)
+    {'ACTIVE': 43.97, 'CLOSED': 44.36, 'PAID': 44.04, 'WRITEOFF': 44.75}
+
+  paid-rate by timezone:  chi2 p=0.5384  (no signal)
+    {'Asia/Dubai': 43.85, 'Asia/Kolkata': 44.37, 'UTC': 44.61}
+
+  paid-rate by schema_version:  chi2 p=0.1000  (no signal)
+    {'v1': 43.68, 'v2': 44.06, 'v3': 45.13}
+
+  Recovered amount vs contact intensity (does more calling recover more?):
+    n_calls     spearman(rho vs Rs recovered)=+0.0080 p=0.164 | corr with paid-flag=+0.0111 p=0.054
+    n_contacts  spearman(rho vs Rs recovered)=+0.0064 p=0.267 | corr with paid-flag=+0.0103 p=0.074
+    n_wa        spearman(rho vs Rs recovered)=+0.0035 p=0.544 | corr with paid-flag=+0.0032 p=0.582
+    n_sms       spearman(rho vs Rs recovered)=+0.0062 p=0.286 | corr with paid-flag=+0.0088 p=0.127
+    n_fv        spearman(rho vs Rs recovered)=-0.0014 p=0.811 | corr with paid-flag=-0.0015 p=0.790
+    n_ptp       spearman(rho vs Rs recovered)=+0.0046 p=0.424 | corr with paid-flag=+0.0026 p=0.657
+    n_touch     spearman(rho vs Rs recovered)=+0.0117 p=0.042 | corr with paid-flag=+0.0123 p=0.033
+  Decile test — recovery by number of touches:
+                  n  paid_rate  mean_recovered
+touch_dec                                     
+(-0.001, 5.0]  7793      0.441       43388.454
+(5.0, 6.0]     4237      0.441       43073.811
+(6.0, 8.0]     8542      0.432       43441.667
+(8.0, 10.0]    5702      0.455       44840.929
+(10.0, 22.0]   3726      0.456       45140.179
+
+  PTP kept-rate by source and by agent tenure:
+    by source:
+      {'CALL': 33.76, 'FIELD': 32.54, 'SMS': 33.74, 'WHATSAPP': 32.1}
+      chi2 p=0.3506
+    by agent tenure:
+      {'<6m': 33.76, '6-12m': 32.93, '12-18m': 33.01, '18-24m': 33.02, '24m+': 32.98}
+      chi2 p=0.9921
+
+  Contact rate by vendor — raw vendor_id vs resolved vendor NAME:
+    by vendor_id:  spread = 19.32% .. 21.09%  (range 1.77pp)
+    by vendor NAME:
+              mean   size
+vendor_name              
+Airtel       19.79  30181
+Exotel       19.50  11906
+Knowlarity   20.68  17841
+TataTele     19.55  12135
+Twilio       19.64  17937
+    chi2 p=0.0438
+    => the apparent vendor_id spread is small-sample noise; once identities are resolved
+       the vendors are statistically indistinguishable.
+
+  Contact rate by hour of day — naive timestamp vs IST-normalised:
+    naive best hour=21 (20.81%)  worst=11 (18.41%)
+    IST   best hour=21 (21.40%)  worst=2 (18.86%)
+    chi2 across IST hours p=0.5302
+    => 'best time to call' rankings differ between the two views and neither is
+       statistically distinguishable from uniform. Do not build a dialer schedule on this.
+
+  Attempt frequency: does attempt_no improve connection?
+    {1: 20.28, 2: 19.78, 3: 20.57, 4: 20.13, 5: 20.09, 6: 19.39, 7: 19.9}
+    chi2 p=0.1652
+
+  Agent performance dispersion (after identity resolution):
+    persons with >=30 calls: 643  contact-rate mean=19.86% sd=3.64pp
+    binomial sd expected from pure chance at mean volume: 3.41pp
+    => observed dispersion / chance dispersion = 1.07x (no real skill differences)
+
+  Complaints per 1,000 contacts by channel (the cost side nobody reports):
+    CALL      complaints=1,578  per 1k events=17.53
+    EMAIL     complaints=1,607  (no event denominator)
+    FIELD     complaints=1,647  per 1k events=65.88
+    SMS       complaints=1,579  per 1k events=35.09
+    WHATSAPP  complaints=1,589  per 1k events=26.48

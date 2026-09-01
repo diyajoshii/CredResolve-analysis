@@ -1,0 +1,349 @@
+################################################################################
+# A. DUPLICATE PAYMENTS
+################################################################################
+payments rows=25,500  unique payment_id=25,000
+  exact duplicate rows (all cols): 486
+  duplicate payment_id (surrogate reused): 500
+  payment_ids where account_id differs across rows: 0
+  payment_ids where amount differs across rows: 0
+
+  distinct payment_reference=20,821 over 25,118 rows
+  references used >1 time: 3,745  (rows involved: 8,042)
+    of these: same account & same amount (true dup txn): 338
+    same ref but DIFFERENT account (id collision): 3,407
+    same ref but different amount: 3,407
+
+  sample duplicated references:
+    payment_id account_id            event_at payment_reference   amount payment_status
+PAYMENT0000552 ACC0021942 2026-08-06 18:56:06     TXN0000000009 11792.14        SUCCESS
+PAYMENT0000552 ACC0021942 2026-08-06 18:56:06     TXN0000000009 11792.14        SUCCESS
+    payment_id account_id            event_at payment_reference    amount payment_status
+PAYMENT0023070 ACC0007158 2026-01-08 00:16:00     TXN0000000314 120410.28        SUCCESS
+PAYMENT0023070 ACC0007158 2026-01-08 00:16:00     TXN0000000314 120410.28        SUCCESS
+    payment_id account_id            event_at payment_reference   amount payment_status
+PAYMENT0011614 ACC0003825 2026-01-01 15:42:05     TXN0000000466 35186.17        PENDING
+PAYMENT0011614 ACC0003825 2026-01-01 15:42:05     TXN0000000466 35186.17        PENDING
+
+  SUCCESS rows=17,880  gross value=Rs 134.15 Cr
+  after dedup on payment_id: 17,534 rows, Rs 131.56 Cr
+  after dedup on payment_reference too: 15,604 rows, Rs 116.88 Cr
+  => overstatement from duplicates: Rs 17.27 Cr (12.87%)
+
+  payment_status value & amount split:
+                    n      cr
+payment_status               
+FAILED           3744   28.35
+PENDING          2592   19.49
+REVERSED         1284    9.74
+SUCCESS         17880  134.15
+  NOTE: REVERSED represents money that came back OUT. Any 'recovery' metric that
+        counts REVERSED as collected, or fails to net it, is overstated.
+  REVERSED refs also appearing as SUCCESS: 273
+
+################################################################################
+# B. ATTRIBUTION ERRORS
+################################################################################
+  total interaction touches: 221,950
+  payments with >=1 prior touch: 13,417 of 15,604
+  last-touch lag (hours) percentiles: p10=66 p50=430 p90=1369 max=4388
+  share of last-touch credit by channel, UNBOUNDED window:
+channel
+CALL        0.4109
+WHATSAPP    0.2725
+SMS         0.2038
+FIELD       0.1128
+  ... with a 24h window: n=508 (3.3% of payments attributable)
+      {'CALL': 0.435, 'WHATSAPP': 0.278, 'SMS': 0.183, 'FIELD': 0.104}
+  ... with a 72h window: n=1,454 (9.3% of payments attributable)
+      {'CALL': 0.429, 'WHATSAPP': 0.265, 'SMS': 0.19, 'FIELD': 0.116}
+  ... with a 168h window: n=3,145 (20.2% of payments attributable)
+      {'CALL': 0.42, 'WHATSAPP': 0.26, 'SMS': 0.205, 'FIELD': 0.115}
+  => Channel 'conversion' is almost entirely an artifact of window choice and of
+     how many touches a channel emits. High-volume channels win last-touch by construction.
+
+  Campaign attribution: calls carry campaign_id; payments do not.
+  Any payment->campaign link must be inferred, so 'campaign performance' in the
+  existing reporting is an inference, not a recorded fact.
+
+################################################################################
+# C. TIMEZONE PROBLEMS
+################################################################################
+  Tables carrying a per-row timezone label:
+    accounts: {'UTC': 10096, 'Asia/Kolkata': 9981, 'Asia/Dubai': 9923}
+    calls: {'Asia/Kolkata': 30485, 'Asia/Dubai': 30464, 'UTC': 30401}
+    agent_sessions: {'Asia/Kolkata': 7506, 'UTC': 7494}
+    vendor_telephony: {'UTC': 8, 'Asia/Kolkata': 7}
+  event_at columns are timezone-NAIVE strings. calls.timezone says which wall clock they are in.
+
+  Naive (as-stored) hour-of-day distribution of calls, by stated timezone:
+hr                0       1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16      17      18      19      20      21      22      23
+timezone                                                                                                                                                                                                    
+Asia/Dubai    0.0401  0.0419  0.0414  0.0418  0.0422  0.0412  0.0429  0.0407  0.0401  0.0416  0.0429  0.0438  0.0407  0.0437  0.0413  0.0419  0.0415  0.0407  0.0428  0.0420  0.0398  0.0417  0.0408  0.0426
+Asia/Kolkata  0.0405  0.0409  0.0454  0.0413  0.0415  0.0438  0.0418  0.0426  0.0411  0.0411  0.0438  0.0402  0.0403  0.0422  0.0406  0.0398  0.0422  0.0400  0.0419  0.0413  0.0414  0.0425  0.0401  0.0434
+UTC           0.0404  0.0420  0.0424  0.0427  0.0396  0.0415  0.0425  0.0431  0.0421  0.0406  0.0398  0.0442  0.0416  0.0411  0.0414  0.0397  0.0444  0.0403  0.0413  0.0425  0.0415  0.0396  0.0418  0.0438
+
+  Share of calls landing outside 08:00-21:00 (RBI-relevant calling window):
+    using raw naive timestamps : 46.02%
+    after converting to IST    : 45.92%
+  Calls whose CALENDAR DAY changes after TZ normalisation: 9.77%
+  Calls whose CALENDAR MONTH changes after TZ normalisation: 305
+  => Any 'best time to call' or daily-volume analysis on raw timestamps is wrong.
+
+  Chronology violations:
+    borrowers with updated_at < created_at: 15,354 of 30,600
+    field_visits with event_at < scheduled_at: 0 (i.e. visit logged before it was scheduled)
+    account_status_history with recorded_at < event_at (late/early arriving): 30,191 / recorded_at > event_at: 29,809
+    ingestion lag hours: p50=-0.1 p95=21.6 min=-24.0 max=24.0
+    complaints resolved before raised: 0 nulls
+    call_attempts occurring BEFORE their parent call: 60,076 of 120,000
+    dispositions logged BEFORE their parent call: 17,451 of 35,000
+  => calls / call_attempts / call_dispositions are NOT a consistent parent-child hierarchy.
+
+################################################################################
+# D. VENDOR MAPPING & DISPOSITION CODE CHANGES
+################################################################################
+ vendor_id vendor_name vendor_account_id     timezone   status schema_version
+VND0000001      Airtel         VAC342762 Asia/Kolkata INACTIVE             v3
+VND0000002      Exotel         VAC456766          UTC INACTIVE             v3
+VND0000003      Twilio         VAC074211          UTC INACTIVE             v3
+VND0000004      Twilio         VAC321507          UTC   ACTIVE             v1
+VND0000005      Twilio         VAC976733 Asia/Kolkata   ACTIVE             v1
+VND0000006  Knowlarity         VAC544470          UTC   ACTIVE             v2
+VND0000007    TataTele         VAC997592          UTC INACTIVE             v1
+VND0000008      Airtel         VAC496672 Asia/Kolkata INACTIVE             v3
+VND0000009      Exotel         VAC382568 Asia/Kolkata INACTIVE             v1
+VND0000010      Airtel         VAC172916          UTC INACTIVE             v1
+VND0000011      Airtel         VAC461665          UTC   ACTIVE             v3
+VND0000012      Airtel         VAC583104          UTC INACTIVE             v1
+VND0000013  Knowlarity         VAC138790 Asia/Kolkata   ACTIVE             v1
+VND0000014  Knowlarity         VAC547425 Asia/Kolkata INACTIVE             v3
+VND0000015    TataTele         VAC225367 Asia/Kolkata   ACTIVE             v2
+
+  15 vendor_ids map to only 5 real vendors.
+  vendor_name -> vendor_ids:
+    Airtel: ['VND0000001', 'VND0000008', 'VND0000010', 'VND0000011', 'VND0000012']
+    Exotel: ['VND0000002', 'VND0000009']
+    Knowlarity: ['VND0000006', 'VND0000013', 'VND0000014']
+    TataTele: ['VND0000007', 'VND0000015']
+    Twilio: ['VND0000003', 'VND0000004', 'VND0000005']
+  => Vendor-level performance reported by vendor_id splits one vendor across up to 5 rows.
+
+  Disposition code taxonomy:
+disposition_version  legacy    v1    v2
+disposition_code                       
+CALLBACK               1313  1289  1270
+DISPUTE                1298  1254  1274
+NO_CONTACT             1370  1335  1305
+PAID                   1251  1248  1319
+PROMISE_TO_PAY         1332  1309  1285
+PTP                    1296  1285  1323
+PTP_BROKEN             1274  1313  1313
+REFUSED                1236  1301  1261
+WRONG_NUMBER           1356  1286  1304
+
+  disposition_version share by month (did the taxonomy migrate?):
+disposition_version  legacy    v1    v2
+m                                      
+2026-01                34.0  32.3  33.6
+2026-02                33.3  33.4  33.3
+2026-03                34.0  32.3  33.7
+2026-04                33.3  32.8  33.9
+2026-05                33.2  34.1  32.7
+2026-06                33.9  34.3  31.8
+2026-07                32.8  33.5  33.8
+2026-08                33.7  31.9  34.4
+
+  disposition_code share by month (%):
+disposition_code  CALLBACK  DISPUTE  NO_CONTACT  PAID  PROMISE_TO_PAY   PTP  PTP_BROKEN  REFUSED  WRONG_NUMBER
+m                                                                                                             
+2026-01               11.7     10.7        11.6  10.2            11.8  11.4        11.1     10.3          11.2
+2026-02               10.8     11.4        12.5  11.3            11.4  10.8        10.3     10.3          11.2
+2026-03               11.1     11.2        10.6  10.6            11.4  11.2        11.3     11.1          11.4
+2026-04               11.2     10.1        11.7  10.8            11.4  11.2        11.0     11.1          11.5
+2026-05               10.6     10.7        11.1  10.9            10.9  11.1        11.5     11.6          11.5
+2026-06               11.0     10.7        11.2  11.2            10.7  11.5        11.3     10.9          11.5
+2026-07               11.2     11.2        11.5  11.3            11.0  10.7        11.5     11.0          10.8
+2026-08               10.6     13.1        12.1  11.3            11.0  11.3        11.3      9.1          10.2
+  NOTE: 'PTP' and 'PROMISE_TO_PAY' are the same business outcome under two codes.
+        A PTP-rate metric matching only one string undercounts by ~half.
+
+################################################################################
+# E. AGENT IDENTITY
+################################################################################
+  agents rows=30,000  distinct agent_id=1,000  distinct employee_code=1,099
+  employee_codes mapping to >1 agent_id: 1,099 (max ids for one person: 46)
+  agent_ids mapping to >1 employee_code: 1,000
+  distribution of agent_ids per employee_code:
+agent_id
+7      1
+13     2
+14     1
+15     6
+16    12
+17    14
+18    16
+19    18
+20    26
+21    59
+22    72
+23    69
+24    70
+25    72
+26    97
+27    86
+28    69
+29    86
+30    63
+31    56
+32    41
+33    42
+34    20
+35    35
+36    18
+37    20
+38    13
+39     3
+40     5
+41     1
+42     3
+43     2
+46     1
+
+  agent_ids whose rows disagree on team: 1,000  on status: 1,000  on vendor_id: 1,000  on employee_code: 1,000
+  => agents is an overwritten SCD-1 table dumped with history. Latest updated_at wins.
+  calls per agent_id: mean=88 p95=105
+  calls per resolved PERSON: mean=137 p95=276
+  => per-agent productivity is understated by ~56% when measured on raw agent_id.
+
+################################################################################
+# F. PORTFOLIO MIX
+################################################################################
+  accounts.dpd / status / outstanding_amount are CURRENT snapshots (no as-of date).
+  accounts.opened_at range: 2024-01-01 00:02:27 .. 2025-11-30 23:52:36
+  dpd distribution: {'count': 30000.0, 'mean': 56.5, 'std': 54.0, 'min': 0.0, '25%': 5.0, '50%': 45.0, '75%': 90.0, 'max': 180.0}
+  dpd unique values: [np.int64(0), np.int64(1), np.int64(5), np.int64(15), np.int64(30), np.int64(45), np.int64(60), np.int64(75), np.int64(90), np.int64(120), np.int64(180)]
+
+  Mix of ACCOUNTS TARGETED per month (daily_targeting joined to accounts):
+risk_segment  HIGH   LOW  MEDIUM   NPA
+m                                     
+2026-01       25.2  25.4    24.8  24.6
+2026-02       25.0  25.7    24.7  24.5
+2026-03       24.9  25.0    26.3  23.8
+2026-04       25.5  25.0    24.9  24.6
+2026-05       24.5  25.1    25.4  25.0
+2026-06       24.6  25.3    26.0  24.1
+2026-07       25.3  25.0    25.0  24.6
+2026-08       23.7  24.9    26.7  24.7
+
+  Mix of dpd band among targeted accounts per month:
+dpd_band    0  1-30  31-60  61-90   90+
+m                                      
+2026-01   8.4  36.4   19.4   17.6  18.2
+2026-02   9.1  37.0   18.1   18.5  17.4
+2026-03   8.8  36.2   17.7   17.4  19.9
+2026-04   9.3  35.5   19.8   17.7  17.6
+2026-05   9.0  36.9   18.2   17.8  18.1
+2026-06   8.6  35.7   18.1   19.3  18.3
+2026-07   8.5  36.0   19.1   18.4  18.1
+2026-08   9.8  34.9   19.7   17.7  17.9
+
+  Mix of ACCOUNTS CALLED per month:
+risk_segment  HIGH   LOW  MEDIUM    NPA
+m                                      
+2025-12        0.0   0.0     0.0  100.0
+2026-01       25.1  25.1    25.3   24.5
+2026-02       25.5  25.0    24.7   24.8
+2026-03       24.9  25.2    25.4   24.5
+2026-04       24.7  25.1    25.4   24.8
+2026-05       25.7  24.6    24.8   25.0
+2026-06       25.6  24.7    24.9   24.9
+2026-07       25.6  24.6    25.1   24.7
+2026-08       25.0  26.0    24.8   24.2
+
+  Campaign target_definition mix by month (calls joined to campaigns):
+target_definition  DPD>=30  DPD>=60  HIGH_RISK    NPA  PROMISE_BROKEN
+m                                                                    
+2025-12                0.0      0.0        0.0  100.0             0.0
+2026-01               18.0     26.4       20.5   15.1            20.0
+2026-02               18.4     25.5       20.3   14.9            20.9
+2026-03               18.2     26.4       20.7   14.8            19.9
+2026-04               18.1     25.4       20.6   15.3            20.6
+2026-05               19.4     25.4       20.1   14.8            20.3
+2026-06               18.5     25.6       21.2   15.2            19.6
+2026-07               18.8     25.8       21.0   15.0            19.5
+2026-08               18.8     25.2       20.2   15.0            20.8
+
+  strategy_version mix by month:
+strategy_version  legacy    v1    v2    v3
+m                                         
+2025-12            100.0   0.0   0.0   0.0
+2026-01             30.5  20.6  22.3  26.6
+2026-02             31.0  20.2  22.1  26.7
+2026-03             31.6  19.5  22.6  26.4
+2026-04             31.1  20.0  21.7  27.2
+2026-05             30.2  19.7  22.9  27.2
+2026-06             31.0  20.0  22.1  26.9
+2026-07             31.2  19.9  22.6  26.2
+2026-08             30.3  20.0  23.6  26.0
+
+  Campaign definition consistency (same name, different channel/target?):
+                   n  ch  td  sv
+campaign_name                   
+30DPD_W1          28   5   5   4
+60DPD_INTENT      18   5   5   4
+BOUNCE            25   5   5   4
+DIGITAL_FOLLOWUP  21   5   5   4
+NPA_RECOVERY      28   5   5   4
+  => campaign_name is NOT a stable definition. Grouping performance by name mixes
+     different channels and different target populations under one label.
+
+################################################################################
+# G. DENOMINATOR MANIPULATION / SURVIVORSHIP
+################################################################################
+  daily_targeting.status by month (%):
+status_x  CONTACTED  EXPIRED  QUEUED  SKIPPED
+m                                            
+2026-01        24.5     25.4    24.4     25.7
+2026-02        24.7     25.8    25.5     24.0
+2026-03        24.9     25.3    25.6     24.3
+2026-04        25.4     25.1    24.4     25.0
+2026-05        25.1     24.8    24.9     25.2
+2026-06        25.1     25.9    24.0     25.0
+2026-07        25.2     24.7    25.5     24.6
+2026-08        25.4     25.3    25.0     24.3
+
+  targeted accounts per month:
+m
+2026-01    5732
+2026-02    5160
+2026-03    5666
+2026-04    5585
+2026-05    5800
+2026-06    5535
+2026-07    5666
+2026-08    1566
+Freq: M
+
+  Accounts that leave the population: account_status_history terminal statuses per month
+status   ACTIVE  CLOSED  DELINQUENT   NPA  PAID   PTP  WRITEOFF
+m                                                              
+2026-01    1184    1220        1236  1189  1249  1182      1170
+2026-02    1092    1074        1093  1102  1096  1066      1069
+2026-03    1232    1206        1276  1262  1210  1135      1208
+2026-04    1121    1210        1174  1122  1136  1123      1231
+2026-05    1200    1201        1217  1156  1256  1243      1213
+2026-06    1170    1165        1145  1210  1180  1182      1189
+2026-07    1204    1240        1189  1257  1212  1172      1201
+2026-08     315     298         282   314   311   308       302
+
+  Do CLOSED/WRITEOFF accounts still get targeted after closure?
+    targeting rows after account closure: 10,748 of 45,000
+
+  Accounts present in payments but never in daily_targeting (unattributable recovery):
+    3,782 accounts
+
+  Contact-rate denominator sensitivity:
+    distinct accounts called      : 28,408
+    distinct accounts targeted    : 23,344
+    total accounts in portfolio   : 30,000
+    Contact rate over 'called' vs 'targeted' vs 'portfolio' gives three different answers.

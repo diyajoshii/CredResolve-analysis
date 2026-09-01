@@ -1,0 +1,15 @@
+table,rule,rows_in,rows_out,rows_removed,pct_removed,reason
+borrowers,drop exact duplicate rows,30600,30000,600,1.961,600 byte-identical rows from a double ingest
+borrowers,SCD-1 collapse to latest _asof,30000,11015,18985,63.283,table is a dump of an overwritten record; one row per borrower_id
+accounts,"keep all, flag broken links",30000,30000,0,0.0,accounts are the grain of the business
+agents,SCD-1 collapse on agent_id,30000,1000,29000,96.667,join-safety only; NOT for reporting
+payments,drop exact duplicate rows,25500,25014,486,1.906,byte-identical re-ingest
+payments,dedup on payment_id,25014,25000,14,0.056,surrogate key must be unique by contract
+payments,"dedup (account,amount,reference)",25000,25000,0,0.0,"same money, same account, same gateway reference = one economic event"
+payments,dedup same acct+amount within 24h,25000,25000,0,0.0,gateway retry under a fresh reference
+calls,drop exact duplicate rows,91350,90079,1271,1.391,re-ingest
+calls,dedup on call_id,90079,90000,79,0.088,surrogate key uniqueness
+calls,restrict to analysis window (IST),90000,89948,52,0.058,stragglers outside the 2026-01-01..2026-08-08 window
+call_dispositions,dedup,35000,35000,0,0.0,surrogate key uniqueness
+promises_to_pay,dedup,18000,18000,0,0.0,surrogate key uniqueness
+daily_targeting,dedup,45000,45000,0,0.0,surrogate key uniqueness

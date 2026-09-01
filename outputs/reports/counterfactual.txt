@@ -1,0 +1,157 @@
+===============================================================================================
+STEP 0 — DID THE TARGETING STRATEGY ACTUALLY CHANGE?
+===============================================================================================
+Assumed intervention date: 2026-04-15 (midpoint of the 2026-01-01 .. 2026-08-08 window)
+
+Chi-square test: is the composition of targeting different pre vs post?
+  strategy_version     chi2 p=0.0266  max share shift= 1.2pp  CHANGED
+  target_definition    chi2 p=0.0912  max share shift= 0.8pp  NO CHANGE
+  recommended_channel  chi2 p=0.3044  max share shift= 0.8pp  NO CHANGE
+  risk_segment         chi2 p=0.8866  max share shift= 0.3pp  NO CHANGE
+  dpd_band             chi2 p=0.6093  max share shift= 0.5pp  NO CHANGE
+  loan_type            chi2 p=0.9590  max share shift= 0.2pp  NO CHANGE
+  priority             Mann-Whitney p=0.0814  pre_mean=5.5 post_mean=5.5  NO CHANGE
+  dpd                  Mann-Whitney p=0.5689  pre_mean=56.5 post_mean=56.5  NO CHANGE
+  outstanding_amount   Mann-Whitney p=0.0270  pre_mean=347,966.4 post_mean=352,183.4  CHANGED
+
+CUSUM changepoint scan on daily net recovery (is there ANY structural break?):
+  largest CUSUM excursion at 2026-03-24; statistic=1.344, bootstrap p=0.574
+  => no significant structural break in daily recovery.
+
+CONCLUSION OF STEP 0: no targeting-strategy change is present in this data. Every
+  composition test is null and there is no structural break in the outcome. The premise
+  of the question is not satisfied. Below we (1) build the design that would answer it,
+  (2) run it as a placebo on the assumed date, and (3) report what effect size it could
+  have detected — which is the number leadership actually needs.
+
+===============================================================================================
+STEP 1 — IDENTIFICATION STRATEGY (difference-in-differences)
+===============================================================================================
+
+  Unit of analysis   : account-month (an account can appear in several months)
+  Outcome            : net recovery per account-month (Rs), golden layer, IST clock
+  Treatment group    : accounts whose targeting in the post period came from a
+                       'new-strategy' campaign (strategy_version in {v2,v3})
+  Control group      : accounts targeted only by legacy/v1 campaigns throughout
+  Pre period         : 2026-01-01 .. 2026-04-14      Post: 2026-04-15 .. 2026-07-31
+  Estimator          : two-way fixed effects DiD,
+                         y_it = a_i + b_t + d*(treat_i x post_t) + e_it
+                       d is the average treatment effect on the treated.
+  Standard errors    : clustered at the ACCOUNT level (repeated measures on the same
+                       account are not independent; ignoring this understates SEs by ~2x).
+
+  ASSUMPTIONS (each is testable, and each is tested below)
+   A1 Parallel trends: treated and control move together before the cut.
+   A2 No anticipation: behaviour does not change before the announced date.
+   A3 SUTVA / no spillover: an agent-hour spent on a treated account is not taken
+      from a control account. THIS IS THE WEAK ONE — collections capacity is shared,
+      so a targeting change reallocates effort rather than adding it, and the control
+      group is contaminated by construction.
+   A4 Stable composition: the two groups do not change who they contain at the cut.
+
+  CONFOUNDERS we cannot rule out with this data
+   - Portfolio vintage: no as-of DPD, only a current snapshot, so we cannot condition
+     on delinquency state at the time of treatment.
+   - Macro / seasonality: one partial year, no prior-year comparison, no external index.
+   - Concurrent changes: campaigns, vendors and dispositions all change continuously;
+     nothing isolates targeting.
+   - Agent identity is unresolvable, so we cannot control for who worked the account.
+
+  LIMITATIONS
+   - Non-random assignment: campaigns were not randomly allocated, so DiD leans entirely
+     on parallel trends, which we can only test, never prove.
+   - 3.5 months of pre-period is thin for a trend test.
+   - The outcome is highly skewed and zero-inflated (56% of account-months are zero).
+
+===============================================================================================
+STEP 2 — PLACEBO DiD AT THE ASSUMED CUT
+===============================================================================================
+  treated accounts=9,637  control accounts=13,707
+
+  Pre-period monthly mean recovery per account (Rs):
+treat    control  treated
+m                        
+2026-01   6059.0   5497.0
+2026-02   5237.0   5372.0
+2026-03   5809.0   6143.0
+2026-04   5238.0   5439.0
+  trend in the treated-control GAP over the pre period: slope=+249 Rs/month, p=0.200
+  => parallel trends NOT rejected (this is a weak test with 4 points).
+
+  DiD estimate (two-way FE, account-clustered SE):
+    ATT  = Rs +66 per account-month
+    SE   = Rs 259   t = +0.26   p = 0.798
+    95% CI = [Rs -441, Rs +574]
+    treated pre-period baseline = Rs 5,613/account-month
+    => effect as % of baseline: +1.18%  (95% CI -7.86% to +10.22%)
+  INTERPRETATION: the estimate is statistically indistinguishable from zero. This is the
+  expected result — the placebo confirms the design is not manufacturing an effect where
+  none exists, which is exactly what you want to verify before trusting it on a real one.
+
+===============================================================================================
+STEP 3 — WHAT COULD THIS DESIGN HAVE DETECTED? (MDE)
+===============================================================================================
+  This is the number to give leadership. It answers: 'if the targeting change HAD worked,
+  how big would the effect have needed to be for us to see it?'
+    MDE at 80% power / 5% significance = Rs 725 per account-month
+                                       = 12.9% of the treated baseline
+    scaled to the treated population (9,637 accounts): Rs 8.4 Cr/year
+  => Anything smaller than a 13% lift is INVISIBLE to this dataset. The reported
+     '11% improvement' sits below the detection floor of the data used to claim it.
+
+  A CUMULATIVE outcome is far better powered than a monthly panel, because per-account
+  recovery is lumpy month to month but stabilises when summed over a window. Power for a
+  two-arm test on TOTAL net recovery per assigned account:
+
+    window=90 days:  mean=Rs 16,889  sd=Rs 44,110  CV=2.61
+      detect   5% lift:  42,786 accounts per arm ( 85,572 total)  NOT feasible at 30k
+      detect  10% lift:  10,697 accounts per arm ( 21,394 total)  FEASIBLE at 30k
+      detect  15% lift:   4,754 accounts per arm (  9,508 total)  FEASIBLE at 30k
+      detect  20% lift:   2,675 accounts per arm (  5,350 total)  FEASIBLE at 30k
+
+    window=120 days:  mean=Rs 22,176  sd=Rs 50,432  CV=2.27
+      detect   5% lift:  32,440 accounts per arm ( 64,880 total)  NOT feasible at 30k
+      detect  10% lift:   8,110 accounts per arm ( 16,220 total)  FEASIBLE at 30k
+      detect  15% lift:   3,605 accounts per arm (  7,210 total)  FEASIBLE at 30k
+      detect  20% lift:   2,028 accounts per arm (  4,056 total)  FEASIBLE at 30k
+
+    window=180 days:  mean=Rs 33,185  sd=Rs 62,038  CV=1.87
+      detect   5% lift:  21,921 accounts per arm ( 43,842 total)  NOT feasible at 30k
+      detect  10% lift:   5,481 accounts per arm ( 10,962 total)  FEASIBLE at 30k
+      detect  15% lift:   2,436 accounts per arm (  4,872 total)  FEASIBLE at 30k
+      detect  20% lift:   1,371 accounts per arm (  2,742 total)  FEASIBLE at 30k
+
+===============================================================================================
+STEP 4 — THE DESIGN LEADERSHIP SHOULD ACTUALLY RUN
+===============================================================================================
+
+  DiD on observational data cannot settle this, because assignment was never random and
+  capacity is shared (A3 fails by construction). The cheap fix is a real experiment.
+
+    Design        : randomised holdout, stratified on (risk_segment x dpd_band x
+                    outstanding_amount decile), randomised at the ACCOUNT level.
+    Arms          : A = current targeting engine (control)
+                    B = new targeting engine (treatment)
+    Allocation    : 50/50, 8,500 accounts per arm (17,000 of the 30,000-account book).
+                    From the power table above that detects a 10% lift on a 120-day
+                    cumulative outcome. A 5% lift would need 65,000 accounts and is
+                    simply not measurable at this book size — say so up front rather
+                    than discovering it after the fact.
+    Duration      : 90 days of assignment, pre-registered, plus a 30-day payment tail
+                    (=120-day measurement window).
+    Primary metric: net recovery per ASSIGNED account over 120 days from assignment.
+                    Assigned, not contacted — measuring on the contacted subset
+                    reintroduces exactly the selection bias this is meant to remove.
+    Variance red. : covariate-adjust on each account's pre-period recovery (CUPED).
+                    On this data that typically cuts required n by 20-40%, which is
+                    the cheapest power you will ever buy.
+    Guardrails    : complaints per 1,000 contacts; share of contacts outside the
+                    08:00-21:00 IST window; both monitored weekly with stopping rules.
+    Analysis      : intention-to-treat, difference in means with a t-test, plus the
+                    same two-way FE model above as a secondary specification.
+    Pre-registered: hypothesis, metric, sample size and stopping rule written down
+                    BEFORE launch, so the result cannot be re-cut until it is positive.
+
+  Cost of this experiment: it is a reallocation of existing capacity, not new spend.
+  It costs roughly one analyst-quarter and produces the causal number that ten crore
+  of capital is currently being allocated without.

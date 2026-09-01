@@ -1,0 +1,135 @@
+==========================================================================================
+PART 1 — WHERE DOES '+11% MONTH-ON-MONTH' COME FROM?
+==========================================================================================
+Payment event window: 2026-01-01 00:14:40 .. 2026-08-08 23:50:23
+NOTE: the brief says '12 months of data'. The event tables actually span
+      2026-01-01 to 2026-08-08 = 7 full months + 8 days. August is a PARTIAL month.
+      Any MoM series that includes August without annualising is broken.
+
+Transaction-level dedup: 0 same-(account,amount,reference) repeats removed; 0 same-(account,amount) repeats inside 24h removed.
+
+Monthly recovery (Rs Cr) under each definition:
+         L0 all statuses, raw  L1 SUCCESS, raw  L2 +drop exact dups  L3 +dedup payment_id  L4 +dedup txn retries  L5 +net reversals
+m                                                                                                                                  
+2026-01                 27.11            19.11                18.72                 18.72                  18.72              17.56
+2026-02                 24.52            17.41                17.03                 17.01                  17.01              15.87
+2026-03                 27.52            19.32                18.92                 18.89                  18.89              17.45
+2026-04                 25.91            17.84                17.52                 17.51                  17.51              16.18
+2026-05                 26.78            18.70                18.43                 18.43                  18.43              17.16
+2026-06                 25.56            17.87                17.59                 17.56                  17.56              16.26
+2026-07                 27.08            19.03                18.72                 18.72                  18.72              17.20
+2026-08                  7.24             4.85                 4.71                  4.71                   4.71               4.42
+
+Month-on-month % under each definition:
+         L0 all statuses, raw  L1 SUCCESS, raw  L2 +drop exact dups  L3 +dedup payment_id  L4 +dedup txn retries  L5 +net reversals
+m                                                                                                                                  
+2026-01                   NaN              NaN                  NaN                   NaN                    NaN                NaN
+2026-02                  -9.6             -8.9                 -9.0                  -9.1                   -9.1               -9.6
+2026-03                  12.2             11.0                 11.1                  11.1                   11.1               10.0
+2026-04                  -5.9             -7.7                 -7.4                  -7.3                   -7.3               -7.3
+2026-05                   3.4              4.8                  5.2                   5.3                    5.3                6.1
+2026-06                  -4.6             -4.4                 -4.6                  -4.7                   -4.7               -5.2
+2026-07                   5.9              6.5                  6.4                   6.6                    6.6                5.8
+2026-08                 -73.3            -74.5                -74.8                 -74.8                  -74.8              -74.3
+
+Mean MoM % (Jan->Jul, EXCLUDING the partial August):
+   L0 all statuses, raw          mean MoM =  +0.26%   CAGR Jan->Jul =  -0.02%/mo   total Jan vs Jul =   -0.1%
+   L1 SUCCESS, raw               mean MoM =  +0.21%   CAGR Jan->Jul =  -0.07%/mo   total Jan vs Jul =   -0.4%
+   L2 +drop exact dups           mean MoM =  +0.29%   CAGR Jan->Jul =  +0.00%/mo   total Jan vs Jul =   +0.0%
+   L3 +dedup payment_id          mean MoM =  +0.29%   CAGR Jan->Jul =  +0.00%/mo   total Jan vs Jul =   +0.0%
+   L4 +dedup txn retries         mean MoM =  +0.29%   CAGR Jan->Jul =  +0.00%/mo   total Jan vs Jul =   +0.0%
+   L5 +net reversals             mean MoM =  -0.06%   CAGR Jan->Jul =  -0.34%/mo   total Jan vs Jul =   -2.1%
+
+>>> None of the value-based definitions grows anywhere near 11%/month.
+
+==========================================================================================
+Testing RATE-based definitions (the ones most likely to be quoted)
+==========================================================================================
+         calls  answered  contact_rate_naive  accts_targeted  accts_called  accts_contacted  accts_paid  recovery_cr  ptp_narrow  ptp_full  disp_total  ptp_rate_narrow_%  ptp_rate_full_%  ptp_kept_%  ptp_kept_excl_open_%  recov_per_targeted_acct  recov_per_called_acct  recov_per_contacted  conv_paid/targeted_%  conv_paid/contacted_%
+2026-01  12638      2535               20.06            5732         10293             2428        2374        18.72         566      1154        4978              11.37            23.18       24.07                 32.46                 32663.84               18189.95             77112.49                 41.42                  97.78
+2026-02  11563      2275               19.67            5160          9525             2184        2173        17.01         483       991        4458              10.83            22.23       25.54                 33.95                 32973.34               17862.72             77904.05                 42.11                  99.50
+2026-03  12845      2568               19.99            5666         10414             2458        2419        18.89         549      1106        4888              11.23            22.63       24.67                 32.51                 33341.40               18140.23             76856.13                 42.69                  98.41
+2026-04  12249      2366               19.32            5585         10040             2262        2304        17.51         538      1085        4792              11.23            22.64       25.24                 33.21                 31358.65               17444.03             77426.19                 41.25                 101.86
+2026-05  12743      2585               20.29            5800         10367             2484        2344        18.43         555      1098        4980              11.14            22.05       25.29                 33.39                 31767.29               17772.77             74174.83                 40.41                  94.36
+2026-06  12134      2484               20.47            5535          9968             2395        2286        17.56         556      1071        4821              11.53            22.22       24.68                 32.56                 31718.11               17612.33             73302.60                 41.30                  95.45
+2026-07  12585      2435               19.35            5666         10285             2347        2335        18.72         519      1053        4865              10.67            21.64       24.56                 32.67                 33046.64               18205.37             79779.41                 41.21                  99.49
+2026-08   3242       632               19.49            1566          3081              621         608         4.71         138       272        1218              11.33            22.33       27.15                 35.43                 30082.82               15290.39             75861.02                 38.83                  97.91
+
+MoM % of each metric (excluding partial Aug):
+         calls  answered  contact_rate_naive  accts_targeted  accts_called  accts_contacted  accts_paid  recovery_cr  ptp_narrow  ptp_full  disp_total  ptp_rate_narrow_%  ptp_rate_full_%  ptp_kept_%  ptp_kept_excl_open_%  recov_per_targeted_acct  recov_per_called_acct  recov_per_contacted  conv_paid/targeted_%  conv_paid/contacted_%
+2026-01    NaN       NaN                 NaN             NaN           NaN              NaN         NaN          NaN         NaN       NaN         NaN                NaN              NaN         NaN                   NaN                      NaN                    NaN                  NaN                   NaN                    NaN
+2026-02   -8.5     -10.3                -1.9           -10.0          -7.5            -10.0        -8.5         -9.1       -14.7     -14.1       -10.4               -4.7             -4.1         6.1                   4.6                      0.9                   -1.8                  1.0                   1.7                    1.8
+2026-03   11.1      12.9                 1.6             9.8           9.3             12.5        11.3         11.0        13.7      11.6         9.6                3.7              1.8        -3.4                  -4.2                      1.1                    1.6                 -1.3                   1.4                   -1.1
+2026-04   -4.6      -7.9                -3.4            -1.4          -3.6             -8.0        -4.8         -7.3        -2.0      -1.9        -2.0               -0.0              0.1         2.3                   2.2                     -5.9                   -3.8                  0.7                  -3.4                    3.5
+2026-05    4.0       9.3                 5.0             3.8           3.3              9.8         1.7          5.2         3.2       1.2         3.9               -0.7             -2.6         0.2                   0.5                      1.3                    1.9                 -4.2                  -2.0                   -7.4
+2026-06   -4.8      -3.9                 0.9            -4.6          -3.8             -3.6        -2.5         -4.7         0.2      -2.5        -3.2                3.5              0.8        -2.4                  -2.5                     -0.2                   -0.9                 -1.2                   2.2                    1.1
+2026-07    3.7      -2.0                -5.5             2.4           3.2             -2.0         2.1          6.7        -6.7      -1.7         0.9               -7.5             -2.6        -0.5                   0.4                      4.2                    3.4                  8.8                  -0.2                    4.2
+
+Mean MoM % Jan->Jul:
+recov_per_contacted        0.63
+ptp_kept_%                 0.38
+conv_paid/contacted_%      0.35
+recovery_cr                0.30
+recov_per_targeted_acct    0.23
+ptp_kept_excl_open_%       0.17
+accts_called               0.15
+calls                      0.15
+recov_per_called_acct      0.07
+accts_targeted             0.00
+conv_paid/targeted_%      -0.05
+accts_paid                -0.12
+disp_total                -0.20
+accts_contacted           -0.22
+answered                  -0.32
+contact_rate_naive        -0.55
+ptp_rate_narrow_%         -0.95
+ptp_narrow                -1.05
+ptp_rate_full_%           -1.10
+ptp_full                  -1.23
+
+>>> CANDIDATE for the '11%' claim: any metric whose mean MoM is near +11%.
+    metrics in the 7-16%/mo band: NONE
+
+==========================================================================================
+The most likely construction of the +11% headline
+==========================================================================================
+Recovery per targeted account, RAW payments (all statuses, dups kept):
+         Rs/acct  MoM %
+m                      
+2026-01  47299.0    NaN
+2026-02  47516.0    0.5
+2026-03  48566.0    2.2
+2026-04  46400.0   -4.5
+2026-05  46178.0   -0.5
+2026-06  46187.0    0.0
+2026-07  47792.0    3.5
+2026-08  46215.0   -3.3
+   mean MoM incl. partial Aug = -0.30%
+   mean MoM excl. Aug         = +0.20%
+
+Same numerator, denominator narrowed to CONTACTED targets only:
+          Rs/acct  MoM %
+m                       
+2026-01  177433.0    NaN
+2026-02  178186.0    0.4
+2026-03  182113.0    2.2
+2026-04  167947.0   -7.8
+2026-05  169515.0    0.9
+2026-06  170773.0    0.7
+2026-07  176986.0    3.6
+2026-08  178259.0    0.7
+   mean MoM excl. Aug = +0.03%
+
+CUMULATIVE (YTD) recovery, Rs Cr — the classic false-growth framing:
+         Cr YTD  MoM %
+m                     
+2026-01   27.11    NaN
+2026-02   51.63   90.4
+2026-03   79.15   53.3
+2026-04  105.06   32.7
+2026-05  131.85   25.5
+2026-06  157.41   19.4
+2026-07  184.49   17.2
+2026-08  191.73    3.9
+   mean MoM of a cumulative series = +39.76%  <-- grows by construction
+   mean MoM of cumulative, all 8 months = +34.64%

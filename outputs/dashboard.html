@@ -1,0 +1,483 @@
+<title>The 11% Correction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+:root{
+  --paper:#EEEFF1; --surface:#F8F9FA; --surface-2:#FFFFFF;
+  --ink:#141B23; --ink-2:#3E4A56; --ink-3:#6B7783;
+  --rule:#D3D8DD; --rule-2:#C0C7CE;
+  --false:#B23A22;      /* the reported / misleading value */
+  --true:#17509E;       /* the corrected / measured value  */
+  --caution:#8F6A0A;    /* unmeasurable, needs judgement   */
+  --false-wash:#B23A2214; --true-wash:#17509E12; --caution-wash:#8F6A0A14;
+  --shadow:0 1px 2px rgba(20,27,35,.06), 0 8px 24px -14px rgba(20,27,35,.24);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D141A; --surface:#131C24; --surface-2:#18232C;
+    --ink:#E4E9ED; --ink-2:#A9B5BF; --ink-3:#77848F;
+    --rule:#25323C; --rule-2:#33434F;
+    --false:#D2674E; --true:#6591DA; --caution:#A97F2E;
+    --false-wash:#D2674E1F; --true-wash:#6591DA1C; --caution-wash:#A97F2E1F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D141A; --surface:#131C24; --surface-2:#18232C;
+  --ink:#E4E9ED; --ink-2:#A9B5BF; --ink-3:#77848F;
+  --rule:#25323C; --rule-2:#33434F;
+  --false:#D2674E; --true:#6591DA; --caution:#A97F2E;
+  --false-wash:#D2674E1F; --true-wash:#6591DA1C; --caution-wash:#A97F2E1F;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  font-size:15px; line-height:1.55; margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:34px 26px 70px}
+h1,h2,h3,.ui{font-family:Archivo,"Helvetica Neue",Arial,sans-serif}
+.mono,.num{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500}
+
+/* ---------------------------------------------------------------- masthead */
+.masthead{display:flex; justify-content:space-between; align-items:baseline;
+  gap:20px; flex-wrap:wrap; padding-bottom:12px; border-bottom:2px solid var(--ink)}
+.masthead h1{font-size:19px; font-weight:700; letter-spacing:-.01em; margin:0}
+.masthead .meta{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3)}
+
+/* ----------------------------------------------------------------- verdict */
+.verdict{margin-top:26px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  gap:34px; align-items:start}
+.claim-line{font-size:15px; color:var(--ink-2); margin:0 0 10px}
+.claim-line s{color:var(--false); text-decoration-thickness:2px; text-decoration-color:var(--false)}
+.verdict h2{font-size:clamp(30px,4.4vw,50px); line-height:1.02; letter-spacing:-.028em;
+  font-weight:700; margin:0 0 14px; text-wrap:balance}
+.verdict h2 em{font-style:normal; color:var(--true)}
+.verdict p{margin:0 0 12px; color:var(--ink-2); max-width:60ch}
+.verdict p strong{color:var(--ink); font-weight:600}
+
+.mechanism{background:var(--surface-2); border:1px solid var(--rule);
+  border-left:3px solid var(--false); border-radius:3px; padding:16px 18px; box-shadow:var(--shadow)}
+.mechanism .eyebrow{display:block; margin-bottom:10px}
+.mech-eq{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  font-size:14px; line-height:2.05; color:var(--ink-2)}
+.mech-eq b{color:var(--ink); font-weight:600}
+.mech-eq .hit{color:var(--false); font-weight:600}
+.mech-eq .ok{color:var(--true); font-weight:600}
+.mech-rule{height:1px; background:var(--rule); margin:10px 0}
+
+/* ------------------------------------------------------------- corrections */
+.corrections{margin-top:32px; display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden}
+.corr{background:var(--surface-2); padding:16px 18px 18px}
+.corr .eyebrow{display:block; margin-bottom:11px}
+.corr .pair{display:flex; align-items:baseline; gap:11px; flex-wrap:wrap}
+.was{font-family:"IBM Plex Mono",monospace; font-size:17px; color:var(--false);
+  text-decoration:line-through; text-decoration-thickness:1.5px; font-variant-numeric:tabular-nums}
+.arrow{color:var(--ink-3); font-size:13px}
+.now{font-family:Archivo,sans-serif; font-size:29px; font-weight:700; letter-spacing:-.02em;
+  color:var(--true); font-variant-numeric:tabular-nums; line-height:1}
+.corr .note{font-size:13px; color:var(--ink-3); margin-top:9px; line-height:1.45}
+
+/* ------------------------------------------------------------------ charts */
+.proof{margin-top:32px}
+.section-head{display:flex; align-items:baseline; gap:14px; padding-bottom:8px;
+  border-bottom:1px solid var(--rule-2); margin-bottom:18px}
+.section-head h3{font-size:15px; font-weight:600; margin:0; letter-spacing:-.005em}
+.section-head span{font-size:13px; color:var(--ink-3)}
+.charts{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule);
+  border:1px solid var(--rule); border-radius:3px; overflow:hidden}
+.chart{background:var(--surface-2); padding:17px 19px 15px}
+.chart .ct{font-family:Archivo,sans-serif; font-size:13.5px; font-weight:600; margin:0 0 2px}
+.chart .cs{font-size:12.5px; color:var(--ink-3); margin:0 0 14px; min-height:2.6em}
+.chart-scroll{overflow-x:auto}
+svg{display:block; width:100%; height:auto}
+.bar{transition:opacity .12s}
+.chart:hover .bar{opacity:.5}
+.chart .bar:hover{opacity:1}
+.axis-lab{font-family:"IBM Plex Mono",monospace; font-size:9.5px; fill:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.val-lab{font-family:"IBM Plex Mono",monospace; font-size:10px; fill:var(--ink-2);
+  font-variant-numeric:tabular-nums}
+.callout{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600}
+.gridline{stroke:var(--rule); stroke-width:1}
+.meanline{stroke:var(--true); stroke-width:1.5; stroke-dasharray:4 3}
+.chart figcaption{font-size:12.5px; color:var(--ink-3); margin-top:12px; padding-top:10px;
+  border-top:1px solid var(--rule); line-height:1.5}
+
+/* ---------------------------------------------------------------- findings */
+.ledger{margin-top:34px}
+table{width:100%; border-collapse:collapse; font-size:14px}
+th{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; text-align:left;
+  padding:0 12px 8px 0; border-bottom:1px solid var(--rule-2); white-space:nowrap}
+td{padding:13px 12px 13px 0; border-bottom:1px solid var(--rule); vertical-align:top;
+  color:var(--ink-2)}
+td:first-child{padding-left:13px; position:relative; color:var(--ink); font-weight:600;
+  font-family:Archivo,sans-serif; font-size:13.5px; width:23%}
+td:first-child::before{content:""; position:absolute; left:0; top:11px; bottom:11px; width:3px;
+  border-radius:2px; background:var(--rule-2)}
+tr[data-grade="false"] td:first-child::before{background:var(--false)}
+tr[data-grade="true"]  td:first-child::before{background:var(--true)}
+tr[data-grade="none"]  td:first-child::before{background:var(--caution)}
+.chip{display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:9.5px;
+  letter-spacing:.09em; text-transform:uppercase; font-weight:600; padding:3px 7px;
+  border-radius:2px; white-space:nowrap}
+.chip.false{color:var(--false); background:var(--false-wash)}
+.chip.true{color:var(--true); background:var(--true-wash)}
+.chip.none{color:var(--caution); background:var(--caution-wash)}
+td .fig{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  color:var(--ink); font-weight:500}
+
+/* ---------------------------------------------------------------- decision */
+.decision{margin-top:38px; border:1px solid var(--rule); border-top:3px solid var(--true);
+  border-radius:3px; background:var(--surface-2); box-shadow:var(--shadow); overflow:hidden}
+.dec-head{padding:20px 24px 18px; border-bottom:1px solid var(--rule)}
+.dec-head .eyebrow{display:block; margin-bottom:9px}
+.dec-head h3{font-size:23px; font-weight:700; letter-spacing:-.018em; margin:0 0 9px;
+  text-wrap:balance}
+.dec-head p{margin:0; color:var(--ink-2); max-width:78ch}
+.dec-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rule)}
+.dec-cell{background:var(--surface-2); padding:16px 20px 18px}
+.dec-cell .eyebrow{display:block; margin-bottom:8px}
+.dec-cell .big{font-family:Archivo,sans-serif; font-size:25px; font-weight:700;
+  letter-spacing:-.02em; font-variant-numeric:tabular-nums; line-height:1.05}
+.dec-cell .sub{font-size:12.5px; color:var(--ink-3); margin-top:7px; line-height:1.45}
+.stage-a .big{color:var(--true)}
+.stage-b .big{color:var(--ink)}
+.risk .big{color:var(--false)}
+
+.caveat{margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:22px}
+.caveat div{border-left:2px solid var(--caution); padding-left:15px}
+.caveat .eyebrow{display:block; margin-bottom:7px}
+.caveat p{margin:0; font-size:13.5px; color:var(--ink-2)}
+
+footer{margin-top:44px; padding-top:14px; border-top:1px solid var(--rule);
+  font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3);
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+
+@media (max-width:900px){
+  .verdict{grid-template-columns:1fr; gap:24px}
+  .corrections,.charts,.dec-grid{grid-template-columns:1fr}
+  .caveat{grid-template-columns:1fr}
+  td:first-child{width:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>Collections Recovery — Audit of the Reported Improvement</h1>
+    <div class="meta">2026-01-01 → 2026-08-08 · 220 days · 30,000 accounts · ₹1,049 Cr book</div>
+  </header>
+
+  <!-- ============================================================ VERDICT -->
+  <section class="verdict">
+    <div>
+      <p class="claim-line"><span class="eyebrow">The claim</span><br>
+        <s>“Recovery has improved by 11% month-on-month.”</s></p>
+      <h2>Recovery has been <em>flat</em> all year. The 11% is February.</h2>
+      <p>Net recovery has run at <strong>₹0.555 Cr per day</strong> every month, varying by
+        2.0%. A trend test returns <strong>p&nbsp;=&nbsp;0.11</strong> — no trend, and the point
+        estimate is <em>negative</em>. Calls, contacts, promises and payments per day are equally flat.</p>
+      <p>The only +11% anywhere in the data is the February&nbsp;→&nbsp;March step, and it is
+        the difference between a 28-day month and a 31-day one.</p>
+    </div>
+
+    <div class="mechanism">
+      <span class="eyebrow">Where the 11% comes from</span>
+      <div class="mech-eq">
+        Feb 2026 recovery &nbsp;<b>₹17.01 Cr</b> over <b>28</b> days<br>
+        Mar 2026 recovery &nbsp;<b>₹18.89 Cr</b> over <b>31</b> days<br>
+        <div class="mech-rule"></div>
+        Headline change &nbsp;&nbsp;&nbsp;&nbsp;<span class="hit">+11.0%</span><br>
+        Calendar alone &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;31 ÷ 28 − 1 = <span class="hit">+10.7%</span><br>
+        <div class="mech-rule"></div>
+        Change per day &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">+0.3%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== CORRECTIONS -->
+  <section class="corrections">
+    <div class="corr">
+      <span class="eyebrow">Recovery, 220 days</span>
+      <div class="pair">
+        <span class="was">₹134.15 Cr</span><span class="arrow">→</span>
+        <span class="now">₹122.09 Cr</span>
+      </div>
+      <p class="note">Overstated by <span class="mono">9.9%</span>. Duplicate payment rows
+        (₹2.59 Cr) plus reversals counted as collections (₹9.47 Cr).</p>
+    </div>
+    <div class="corr">
+      <span class="eyebrow">Month-on-month change</span>
+      <div class="pair">
+        <span class="was">+11.0%</span><span class="arrow">→</span>
+        <span class="now">≈ 0%</span>
+      </div>
+      <p class="note">Mean across seven complete months: <span class="mono">+0.3%</span> gross,
+        <span class="mono">−0.1%</span> net. Neither is distinguishable from zero.</p>
+    </div>
+    <div class="corr">
+      <span class="eyebrow">Period examined</span>
+      <div class="pair">
+        <span class="was">12 months</span><span class="arrow">→</span>
+        <span class="now">7 mo + 8 d</span>
+      </div>
+      <p class="note">August holds 8 days. Left in a month-on-month series it reads as a
+        <span class="mono">−75%</span> collapse. It is excluded here.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================== PROOF -->
+  <section class="proof">
+    <div class="section-head">
+      <h3>The same money, two denominators</h3>
+      <span>Net recovery, seven complete months. Left is what the business reports; right is what happened.</span>
+    </div>
+
+    <div class="charts">
+      <figure class="chart" style="margin:0">
+        <p class="ct">As reported — monthly total</p>
+        <p class="cs">Gross successful collections, ₹ Cr per month. Reads as a volatile series
+          with a strong March.</p>
+        <div class="chart-scroll"><svg id="chart-reported" viewBox="0 0 460 200" role="img"
+          aria-label="Monthly gross recovery in crore: January 18.72, February 17.01, March 18.89, April 17.51, May 18.43, June 17.56, July 18.72."></svg></div>
+        <figcaption>The February bar is short because February is short. Comparing it to March
+          produces the reported +11%.</figcaption>
+      </figure>
+
+      <figure class="chart" style="margin:0">
+        <p class="ct">Exposure-normalised — per day</p>
+        <p class="cs">Net recovery divided by calendar days, ₹ Cr per day. The volatility
+          disappears entirely.</p>
+        <div class="chart-scroll"><svg id="chart-perday" viewBox="0 0 460 200" role="img"
+          aria-label="Net recovery per day in crore: January 0.566, February 0.567, March 0.563, April 0.539, May 0.553, June 0.542, July 0.555. Mean 0.555, coefficient of variation 2 percent."></svg></div>
+        <figcaption>Flat at ₹0.555 Cr/day, CV 2.0%. Every month sits within 5% of the mean.
+          Nothing improved and nothing degraded.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- =========================================================== FINDINGS -->
+  <section class="ledger">
+    <div class="section-head">
+      <h3>What the audit found</h3>
+      <span>Fourteen data issues; these six change a decision.</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Finding</th><th style="width:118px">Grade</th><th>What the data shows</th>
+      </tr></thead>
+      <tbody>
+        <tr data-grade="true">
+          <td>Targeting carries no information</td>
+          <td><span class="chip true">Fact</span></td>
+          <td><span class="fig">43.1%</span> of targeting aims at accounts last recorded
+            CLOSED, WRITEOFF or PAID — against a <span class="fig">42.9%</span> random-selection
+            baseline. Priority score, channel, risk segment and DPD band are all independent of
+            who pays. This is the one genuine gap in the operation.</td>
+        </tr>
+        <tr data-grade="false">
+          <td>Calls outside the legal window</td>
+          <td><span class="chip false">Compliance</span></td>
+          <td><span class="fig">45.9%</span> of calls fall outside 08:00–21:00 IST (RBI Fair
+            Practices Code). Invisible today because <span class="mono">event_at</span> is a
+            naive local string and the timezone sits in a separate column with three values.</td>
+        </tr>
+        <tr data-grade="false">
+          <td>Promises undercounted by half</td>
+          <td><span class="chip false">Overstated</span></td>
+          <td>Dashboards match <span class="mono">'PTP'</span> and report an
+            <span class="fig">11.2%</span> PTP rate. <span class="mono">PTP</span> and
+            <span class="mono">PROMISE_TO_PAY</span> are the same event under two live
+            taxonomies; the true rate is <span class="fig">22.4%</span>.</td>
+        </tr>
+        <tr data-grade="none">
+          <td>Agent identity is unrecoverable</td>
+          <td><span class="chip none">Unmeasurable</span></td>
+          <td>1,000 agent IDs carry 1,099 employee codes in a single connected graph; each ID
+            shows ~9.5 different names. Resolving on employee code — the obvious fix — invents a
+            <span class="fig">+56%</span> productivity gain. All agent and tenure metrics are
+            withdrawn.</td>
+        </tr>
+        <tr data-grade="none">
+          <td>Channel conversion is a dial</td>
+          <td><span class="chip none">Unmeasurable</span></td>
+          <td>Only <span class="fig">3%</span> of payments have any interaction within 24 hours.
+            Last-touch share barely moves across a 365× change in attribution window, because
+            credit follows message volume, not effect.</td>
+        </tr>
+        <tr data-grade="none">
+          <td>Cost data does not exist</td>
+          <td><span class="chip none">Absent</span></td>
+          <td>No cost, rate, tariff, salary or commission column in any of the 17 tables. Cost
+            per ₹ recovered — a headline metric — is <em>not computable</em>. Every ROI figure
+            below rests on stated assumptions.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =========================================================== DECISION -->
+  <section class="decision">
+    <div class="dec-head">
+      <span class="eyebrow">The ₹10 Cr decision</span>
+      <h3>Stage the commitment. Spend ₹1.2 Cr to make the decision answerable.</h3>
+      <p>None of the six options survives contact with the evidence. Better targeting is the
+        only one where the data proves a <em>gap</em> rather than merely failing to disprove one
+        — but a proven gap is not a proven payoff. Fund the measurement, then let the result
+        release the capital.</p>
+    </div>
+    <div class="dec-grid">
+      <div class="dec-cell stage-a">
+        <span class="eyebrow">Stage 1 · months 0–6</span>
+        <div class="big">₹1.2 Cr</div>
+        <p class="sub">Cost instrumentation, golden-layer platform, an account-state service,
+          and a randomised holdout harness.</p>
+      </div>
+      <div class="dec-cell stage-b">
+        <span class="eyebrow">Stage 2 · gated</span>
+        <div class="big">₹8.8 Cr</div>
+        <p class="sub">Released only on a pre-registered ≥10% lift, 8,500 accounts per arm,
+          120-day window. Otherwise returned.</p>
+      </div>
+      <div class="dec-cell">
+        <span class="eyebrow">Break-even</span>
+        <div class="big">+0.6%</div>
+        <p class="sub">The lift Stage 1 must produce to pay for itself. The full ₹10 Cr would
+          need <span class="mono">+4.9%</span>.</p>
+      </div>
+      <div class="dec-cell risk">
+        <span class="eyebrow">Scale check</span>
+        <div class="big">1.7×</div>
+        <p class="sub">₹10 Cr against ₹5.8 Cr of modelled annual operating cost. This rebuilds
+          the operation, it does not extend it.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="caveat">
+    <div>
+      <span class="eyebrow">Question one for the CFO</span>
+      <p>Is this book owned or collected for a fee? On a 20% agency fee, break-even on ₹10 Cr
+        rises from a +4.9% lift to <strong>+25%</strong> — a lever this data gives no reason to
+        believe exists. The answer changes the recommendation to an unambiguous no.</p>
+    </div>
+    <div>
+      <span class="eyebrow">The limit of this evidence</span>
+      <p>The minimum detectable effect of this dataset is <strong>12.9%</strong>. Even had the
+        11% improvement been real, this data could not have seen it. The claim sits below the
+        resolution of the instrument used to make it.</p>
+    </div>
+  </div>
+
+  <footer>
+    <span>Golden layer: 254,963 rows from 305,450 raw · 14 data-quality issues · reconciliation ledger in <span class="mono">outputs/golden/</span></span>
+    <span>Confidence — flat recovery: high · targeting gap: high · cost &amp; ROI: low</span>
+  </footer>
+</div>
+
+<script>
+const REPORTED = [
+  {m:"Jan", v:18.72}, {m:"Feb", v:17.01}, {m:"Mar", v:18.89}, {m:"Apr", v:17.51},
+  {m:"May", v:18.43}, {m:"Jun", v:17.56}, {m:"Jul", v:18.72}
+];
+const PERDAY = [
+  {m:"Jan", v:0.566}, {m:"Feb", v:0.567}, {m:"Mar", v:0.563}, {m:"Apr", v:0.539},
+  {m:"May", v:0.553}, {m:"Jun", v:0.542}, {m:"Jul", v:0.555}
+];
+
+const NS = "http://www.w3.org/2000/svg";
+const el = (n, a = {}) => {
+  const e = document.createElementNS(NS, n);
+  for (const k in a) e.setAttribute(k, a[k]);
+  return e;
+};
+
+/* Bars with 4px rounded data-ends anchored to the baseline, 2px gaps between bars,
+   a fixed zero baseline, and selective direct labels. Scales start at zero. */
+function drawBars(id, data, opts) {
+  const svg = document.getElementById(id);
+  svg.textContent = "";
+  const W = 460, H = 200, L = 40, R = 12, T = 16, B = 26;
+  const iw = W - L - R, ih = H - T - B;
+  const max = opts.max, r = 4, gap = 2;
+  const step = iw / data.length;
+  const bw = step - gap * 2;
+  const y = v => T + ih - (v / max) * ih;
+
+  opts.ticks.forEach(t => {
+    svg.appendChild(el("line", {class:"gridline", x1:L, x2:W - R, y1:y(t), y2:y(t)}));
+    const lb = el("text", {class:"axis-lab", x:L - 7, y:y(t) + 3.2, "text-anchor":"end"});
+    lb.textContent = opts.fmtTick(t);
+    svg.appendChild(lb);
+  });
+
+  data.forEach((d, i) => {
+    const x = L + i * step + gap, top = y(d.v), h = T + ih - top;
+    const hl = opts.highlight === i;
+    // rounded top corners only: the data-end is rounded, the baseline is square
+    const path = `M${x},${T + ih} L${x},${top + r} Q${x},${top} ${x + r},${top}
+                  L${x + bw - r},${top} Q${x + bw},${top} ${x + bw},${top + r}
+                  L${x + bw},${T + ih} Z`;
+    const p = el("path", {class:"bar", d:path, fill:opts.color, "fill-opacity": hl ? 1 : .82});
+    const ttl = el("title");
+    ttl.textContent = `${d.m}: ${opts.fmtVal(d.v)}`;
+    p.appendChild(ttl);
+    svg.appendChild(p);
+
+    const lb = el("text", {class:"axis-lab", x:x + bw / 2, y:H - 8, "text-anchor":"middle"});
+    lb.textContent = d.m;
+    svg.appendChild(lb);
+
+    if (opts.labelAll || hl) {
+      // labels sit inside the mark when bars run tall, above it when they don't,
+      // so a value never collides with the mean line or the callout
+      const inside = opts.labelInside;
+      const vl = el("text", {
+        class:"val-lab", x:x + bw / 2, y: inside ? top + 15 : top - 6,
+        "text-anchor":"middle",
+        ...(inside ? {fill:"var(--surface-2)"} : {})
+      });
+      vl.textContent = opts.fmtVal(d.v);
+      svg.appendChild(vl);
+    }
+  });
+
+  if (opts.mean != null) {
+    svg.appendChild(el("line", {class:"meanline", x1:L, x2:W - R,
+                                y1:y(opts.mean), y2:y(opts.mean)}));
+  }
+  if (opts.callout) {
+    const g = el("text", {class:"callout", x:opts.callout.x, y:opts.callout.y,
+                          "text-anchor":opts.callout.anchor || "middle",
+                          fill:opts.callout.fill || "var(--false)"});
+    g.textContent = opts.callout.text;
+    svg.appendChild(g);
+  }
+}
+
+drawBars("chart-reported", REPORTED, {
+  max: 22, ticks: [0, 11, 22], color: "var(--false)", highlight: 2,
+  fmtTick: t => t.toFixed(0), fmtVal: v => "₹" + v.toFixed(2),
+  callout: {x: 175, y: 14, text: "Feb → Mar  +11.0%"}
+});
+
+drawBars("chart-perday", PERDAY, {
+  max: 0.70, ticks: [0, 0.35, 0.70], color: "var(--true)", highlight: -1,
+  labelAll: true, labelInside: true, mean: 0.555,
+  fmtTick: t => t.toFixed(2), fmtVal: v => v.toFixed(3),
+  callout: {x: 448, y: 14, text: "mean ₹0.555 Cr/day  ·  CV 2.0%",
+            anchor: "end", fill: "var(--true)"}
+});
+</script>

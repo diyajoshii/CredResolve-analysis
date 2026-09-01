@@ -1,0 +1,204 @@
+==================================================================================================
+1. THE OPERATION, ANNUALISED FROM THE GOLDEN LAYER
+==================================================================================================
+  accounts                                30,000.00
+  book_cr                                  1,048.90
+  net_recovery_cr                            122.09
+  net_recovery_cr_ann                        202.56
+  recovery_pct_of_book_ann                    19.31
+  agent_hours                             78,870.89
+  agent_hours_ann                        130,853.97
+  calls                                   89,948.00
+  calls_ann                              149,231.91
+  call_minutes_ann                     1,121,761.05
+  whatsapp_ann                            99,545.45
+  sms_ann                                 74,659.09
+  field_visits_ann                        41,477.27
+  complaints_ann                          13,272.73
+  recovery_per_agent_hour                 15,479.95
+  recovery_per_account_ann                67,520.43
+
+  Observation window = 220 days (2026-01-01 .. 2026-08-08); annualisation factor 1.659.
+  CAVEAT: agent_sessions holds only ~68 logins/day for a 1,000-agent roster placing ~409
+  calls/day. The session table is a sample, not the roster, so agent-hours and every
+  cost-per-hour figure below inherit that uncertainty. Flagged, not hidden.
+
+==================================================================================================
+2. UNIT-COST MODEL  (NO COST DATA EXISTS IN THE DATASET)
+==================================================================================================
+  Searched all 17 tables for cost, rate, tariff, salary, commission, fee: none present.
+  'Cost per Rs recovered' and 'recovery per agent-hour in Rs of margin' are therefore
+  NOT computable. Every figure below is an assumption with a stated range.
+
+  ASSUMPTION  agent_cost_per_hour        = 300   (range tested: (200, 450))
+  ASSUMPTION  voice_per_min              = 0.7   (range tested: (0.45, 1.1))
+  ASSUMPTION  sms_each                   = 0.2   (range tested: (0.12, 0.3))
+  ASSUMPTION  whatsapp_each              = 0.55   (range tested: (0.35, 0.9))
+  ASSUMPTION  field_visit_each           = 250   (range tested: (150, 450))
+  ASSUMPTION  platform_overhead_pct      = 0.15   (range tested: (0.1, 0.25))
+
+  Annual operating cost under central assumptions (Rs Cr):
+    agents           3.93
+    voice            0.08
+    sms              0.00
+    whatsapp         0.01
+    field            1.04
+    platform         0.76
+    TOTAL            5.81
+
+  Cost per Rs 1 recovered  = Rs 0.029
+  Recovery per agent-hour  = Rs 15,480
+  Sensitivity: annual opex ranges Rs 3.6 Cr .. Rs 9.9 Cr => cost per Rs recovered Rs 0.018 .. Rs 0.049
+
+  REASONABLENESS CHECK (do not publish a number you have not sanity-checked):
+    Implied cost-to-collect = 2.9% of recovered value.
+    Indian third-party collections typically runs 5-15%. 2.9% is 2-5x too low.
+    Two explanations, and they have opposite implications:
+      (a) the event tables are a SAMPLE of a larger operation while payments are complete
+          -> activity volumes and therefore costs are understated;
+      (b) the payments table is inflated relative to real activity.
+    Either way the cost model must not be treated as decision-grade until the real cost
+    feeds exist. This is a reason to fund instrumentation before capacity.
+
+  *** SCALE CHECK — the single most important number in this document ***
+      Annual cost of running the entire collections operation : Rs 5.8 Cr
+      Proposed investment                                     : Rs 10.0 Cr
+      Ratio                                                   : 1.7x
+      Rs 10 Cr is not an increment to this operation. Under any assumption in the range
+      above it is between one and three times the entire annual cost of running it.
+      A question framed as 'where do we deploy 10 Cr' is really 'do we rebuild the
+      operation at 2-3x its current cost base', and it deserves that framing.
+
+==================================================================================================
+3. THE REVENUE MODEL FORK — WHICH DECIDES EVERYTHING
+==================================================================================================
+  The dataset does not say whether the business OWNS this book or COLLECTS IT FOR A FEE.
+  The answer changes the break-even by a factor of eight.
+
+  Own book (keeps 100% of recovery)    -> Rs 10 Cr needs Rs    10.0 Cr of incremental recovery =   4.9% lift on Rs 203 Cr/yr
+  Agency, 20% collection fee           -> Rs 10 Cr needs Rs    50.0 Cr of incremental recovery =  24.7% lift on Rs 203 Cr/yr
+  Agency, 12% collection fee           -> Rs 10 Cr needs Rs    83.3 Cr of incremental recovery =  41.1% lift on Rs 203 Cr/yr
+
+  Under the agency model a 10 Cr investment requires a 25-41% recovery lift to break
+  even in year one. Nothing in this data suggests any lever of that size exists.
+  RECOMMENDATION IS CONDITIONAL ON RESOLVING THIS. It is question one for the CFO.
+
+==================================================================================================
+4. THE SIX OPTIONS, SCORED ON EVIDENCE
+==================================================================================================
+
+  1. Better telephony infrastructure   [STRONG EVIDENCE AGAINST]  -> No
+      Contact rate 19.4-20.5%/month, flat (p=0.55 across months). After resolving 15 vendor_ids to
+       5 real vendors, contact rate spread is 19.5-20.7% and the between-vendor difference is marg
+      inal (chi2 p=0.044 on 90k calls — statistically detectable, economically 1.2pp). No vendor i
+      s meaningfully better, so there is no better vendor to buy.
+
+  2. More collection agents   [STRONG EVIDENCE AGAINST]  -> No
+      Recovery per agent-hour flat. Agent-level performance dispersion is 1.07x what pure binomial
+       chance predicts — i.e. there are no measurably better or worse agents. Contact intensity co
+      rrelates with recovery at rho=+0.011. Adding agents scales an activity with no measured link
+       to the outcome.
+
+  3. AI voice automation   [NO DATA]  -> Cannot assess
+      No agentic-voice or IVR channel exists in the data at all, despite the brief naming both. Ze
+      ro rows. There is no baseline to improve on and no way to size the opportunity. This is not 
+      a 'no', it is an 'unmeasurable'.
+
+  4. Better borrower targeting   [STRONG EVIDENCE OF A GAP (not of a fix)]  -> Best candidate
+      The targeting engine is provably uninformative: 43.2% of targeting hits accounts whose last 
+      known status was CLOSED/WRITEOFF/PAID, against a 42.9% random-selection baseline. Priority s
+      core, recommended channel, risk segment and DPD band are all independent of who pays (all ch
+      i2 p>0.05 except dpd_band at p=0.028, a 2.4pp spread). Targeting today is statistically indi
+      stinguishable from drawing names from a hat.
+
+  5. WhatsApp / digital engagement   [EVIDENCE IS UNINTERPRETABLE]  -> No
+      Last-touch credit to WhatsApp swings between 26% and 28% purely by changing the attribution 
+      window from 24h to unbounded, and only 3-20% of payments have ANY touch within a plausible w
+      indow. Digital 'conversion' is an artifact of message volume. Complaints run 26.5 per 1,000 
+      WhatsApp events vs 17.5 for voice.
+
+  6. Field operations   [STRONG EVIDENCE AGAINST]  -> No
+      Field generates 65.9 complaints per 1,000 events - 3.8x the voice rate — and is the most exp
+      ensive channel per touch under every cost assumption. Field PTP-kept rate (32.5%) is the LOW
+      EST of the four sources. Scaling it raises regulatory exposure fastest.
+
+==================================================================================================
+5. RECOMMENDATION
+==================================================================================================
+
+  HEADLINE: Do not deploy Rs 10 Cr against any of the six options on this evidence base.
+  Deploy Rs 1.2 Cr to make the decision answerable, and gate the remaining Rs 8.8 Cr on a
+  pre-registered result. If forced to name one area, it is OPTION 4 — better borrower
+  targeting — because it is the only option where the data proves a gap rather than merely
+  failing to disprove one.
+
+  WHY NOT JUST BACK OPTION 4 WITH THE FULL Rs 10 CR
+  We can prove the current targeting engine carries no signal. We CANNOT prove a better one
+  would recover more, because in this data recovery is uncorrelated with every operational
+  lever we can measure. Those are different claims, and only the first is supported.
+  Committing 10 Cr on the second would repeat exactly the error that produced the 11% headline.
+
+  STAGE 1 — Rs 1.2 Cr, months 0-6  (the decision-enabling spend)
+     Rs 0.20 Cr  Instrument the cost side: per-call, per-message, per-visit, per-agent-hour cost feeds
+     Rs 0.45 Cr  Golden-layer data platform: the pipeline in this repo, productionised with tests
+     Rs 0.25 Cr  Account-state service: a real state machine so 'closed' means closed
+     Rs 0.20 Cr  Randomised holdout harness + pre-registration process
+     Rs 0.10 Cr  Compliance monitor: calling-window and complaint-rate guardrails
+     Rs 1.20 Cr  TOTAL
+
+  STAGE 2 — Rs 8.8 Cr, months 6-24, RELEASED ONLY IF the Stage 1 experiment clears
+     a pre-registered >=10% lift on net recovery per assigned account over 120 days.
+     If it does not clear, the 8.8 Cr is returned to the balance sheet. That option
+     to NOT spend is worth more than any of the six options is worth on current evidence.
+
+==================================================================================================
+6. THE NUMBERS LEADERSHIP ASKED FOR
+==================================================================================================
+
+  --- under the own book revenue model ---
+  scenario       lift   incr. recovery   gross value     cost       net      ROI    payback
+  Downside        0%            0.0 Cr         0.0 Cr   10.0 Cr    -10.0 Cr    -100%      never
+  Base            6%           12.2 Cr        12.2 Cr   10.0 Cr     +2.2 Cr     +22%      10 mo
+  Upside         12%           24.3 Cr        24.3 Cr   10.0 Cr    +14.3 Cr    +143%       5 mo
+  BREAK-EVEN (year 1, full 10 Cr): +4.9% lift = Rs 10.0 Cr incremental recovery
+  BREAK-EVEN on Stage 1 alone (1.2 Cr): +0.6% lift  <-- this is the bet actually being made
+
+  --- under the agency @20% revenue model ---
+  scenario       lift   incr. recovery   gross value     cost       net      ROI    payback
+  Downside        0%            0.0 Cr         0.0 Cr   10.0 Cr    -10.0 Cr    -100%      never
+  Base            6%           12.2 Cr         2.4 Cr   10.0 Cr     -7.6 Cr     -76%      49 mo
+  Upside         12%           24.3 Cr         4.9 Cr   10.0 Cr     -5.1 Cr     -51%      25 mo
+  BREAK-EVEN (year 1, full 10 Cr): +24.7% lift = Rs 50.0 Cr incremental recovery
+  BREAK-EVEN on Stage 1 alone (1.2 Cr): +3.0% lift  <-- this is the bet actually being made
+
+  EXPECTED INCREMENTAL RECOVERY
+    Point estimate      : not estimable from this data. Stated honestly rather than invented.
+    Defensible range    : 0% to 13% on the own-book model. The upper bound is the minimum
+                          detectable effect of the existing data (12.9%) — a true effect
+                          larger than that would already be visible, and it is not.
+    Most likely         : 0-6%. Every measured lever is null; the only proven gap (targeting
+                          carries no signal) has an unmeasured payoff.
+
+  KEY ASSUMPTIONS
+    1. The book is owned, not collected on a fee. If it is fee-based, break-even needs a
+       25-41% lift and the answer becomes an unambiguous no on all six options.
+    2. Agent-hour and per-touch costs are within the ranges above. Opex swings Rs 4-10 Cr
+       across that range, which moves cost per Rs recovered from 0.02 to 0.05.
+    3. The 220-day window is representative of a full year. It contains no festival season,
+       no year-end, and no prior-year comparison, so seasonality is entirely unmodelled.
+    4. Recovery stays flat without intervention (the null this analysis established).
+
+  DOWNSIDE SCENARIO
+    The lift is zero, which is what every measured lever in this dataset predicts.
+    Full deployment  : Rs 10 Cr spent, Rs 0 returned, ROI -100%, and the operation now runs
+                       at 2-3x its previous cost base with the same output.
+    Staged approach  : Rs 1.2 Cr spent, Rs 8.8 Cr preserved, and the business ends the year
+                       knowing the causal answer instead of arguing about it.
+
+  CONFIDENCE
+    HIGH   that reported recovery is flat and the 11% claim is an artifact (multiple
+           independent definitions, all null; the mechanism is identified exactly).
+    HIGH   that current targeting carries no signal (43.2% vs a 42.9% random baseline).
+    MEDIUM that no operational lever works (these are null results on ~30k accounts; the
+           data can only rule out effects above ~13%, so a genuine 5% lever could be hiding).
+    LOW    on every cost and ROI figure, because the dataset contains no cost data at all.
